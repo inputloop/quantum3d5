@@ -1,0 +1,109 @@
+/* accessibility.css -- the contrast, focus and motion layer, loaded after quantum3d5.css.
+ *
+ * Every rule here answers a measured finding (docs/ACCESSIBILITY.md lists them with their numbers):
+ * text must reach WCAG 2.1 AA contrast, 4.5:1 (3:1 for large text), against every colour stop of
+ * the background it sits on, in both themes. tests/accessibility.py measures it again on every run.
+ *
+ * Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
+/* ---- Keyboard focus: always visible, never only a colour change ---- */
+:focus-visible {
+    outline: 2px solid #ffcf5a !important;
+    outline-offset: 2px !important;
+}
+html[data-theme="light"] :focus-visible {
+    outline-color: #1d4ed8 !important;
+}
+
+/* ---- Visually hidden, still read aloud ---- */
+.visually-hidden {
+    position: absolute !important;
+    width: 1px; height: 1px;
+    margin: -1px; padding: 0; border: 0;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+
+/* ---- Reduced motion: the simulation keeps running; the interface stops gliding ---- */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* ---- Dark theme contrast ---- */
+html:not([data-theme="light"]) .empty { color: #a8a8bc !important; }
+html:not([data-theme="light"]) #tourStepIndicator { color: #c4c8dc !important; }
+html:not([data-theme="light"]) #tourSkip { color: #d0d0dc !important; }
+
+/* Buttons with white text on a gradient: darken the lighter stop until white reads on both. */
+#helpBtn { background: linear-gradient(135deg, #6e5024, #8a6328) !important; }
+#tourCard button.primary,
+html[data-theme="light"] #tourCard button.primary { background: linear-gradient(135deg, #3f5f85, #4a6a90) !important; color: #fff !important; }
+#lessonPanel .lesson-nav button.primary { background: linear-gradient(135deg, #5a4abf, #6a5acf) !important; }
+
+/* ---- Light theme contrast ---- */
+html[data-theme="light"] { --text-accent: #7a4e10; }
+html[data-theme="light"] #tourCard h3,
+html[data-theme="light"] #tourTitle,
+html[data-theme="light"] #graphsPanel h5,
+html[data-theme="light"] #doubleSlitPanel h5,
+html[data-theme="light"] #discoveriesPanel h5,
+html[data-theme="light"] #achievementsPanel h5,
+html[data-theme="light"] #unknownPanel header h4,
+html[data-theme="light"] #lessonPanel .lesson-step-body strong,
+html[data-theme="light"] .achievement-toast .title-row { color: #7a4e10 !important; }
+
+html[data-theme="light"] label,
+html[data-theme="light"] #achievementsProgressLabel,
+html[data-theme="light"] #lessonsListPanel .intro,
+html[data-theme="light"] #tourStepIndicator,
+html[data-theme="light"] .empty,
+html[data-theme="light"] #achievementsPanel .ach-row .ach-hint { color: #464c60 !important; }
+
+html[data-theme="light"] #discoveriesClose,
+html[data-theme="light"] #achievementsClose,
+html[data-theme="light"] #lessonsListClose,
+html[data-theme="light"] #lessonPanelClose,
+html[data-theme="light"] #graphsClose,
+html[data-theme="light"] #doubleSlitClose,
+html[data-theme="light"] #lessonPanel .lesson-nav button.exit { color: #464c60 !important; }
+
+html[data-theme="light"] #lessonStepNum { color: #4b3ba3 !important; }
+html[data-theme="light"] #unknownPanelHide { color: #8a2a2a !important; }
+html[data-theme="light"] #unknownPanelCopyAll { background: #6e4a36 !important; color: #fff4e8 !important; }
+
+/* Values whose colour IS the information (a wavelength drawn in its own colour): keep the colour,
+   give it a dark plate in the light theme so the neon still reads. */
+html[data-theme="light"] #shineWavelengthValue,
+html[data-theme="light"] #dsWavelengthVal,
+html[data-theme="light"] #dsSlitSepVal,
+html[data-theme="light"] #dsSlitWidthVal,
+html[data-theme="light"] #dsScreenVal {
+    background: #14182a; border-radius: 4px; padding: 0 5px;
+    color: #e8ecf4;   /* until the page paints the value in its own colour (an inline style, which wins) */
+}
+
+/* Presets and scene buttons: the light theme set dark text on their dark gradients. */
+html[data-theme="light"] .presetBtn { background: linear-gradient(to right, #dde3ec, #cfd8e6) !important; color: #1a1e2e !important; border-color: #a8b0c0 !important; }
+html[data-theme="light"] .scene-io-btn { background: linear-gradient(135deg, #2f5a50, #3a6559) !important; color: #fff !important; }
+
+/* Help pages and the glossary in the light theme: headings and glossary links were drawn in the dark
+   theme's pale gold and ice blue on the light modal (about 1.1:1). */
+html[data-theme="light"] #helpModal .pageBody h3 { color: #7a4e10 !important; }
+html[data-theme="light"] #helpModal .pageBody h4 { color: #2e3a5a !important; }
+html[data-theme="light"] .gloss { color: #7a4e10 !important; border-bottom-color: #7a4e10 !important; }
+html[data-theme="light"] .glossarySection h3 { color: #2e3a5a !important; }
+
+/* Glossary cards (dark in both themes): the small captions were just under 4.5:1. */
+.glossaryCard .cardMeta,
+.elementDetails .elementCategory { color: #a8b2c4 !important; }
+.periodicSquare .atomicNumber { color: #d4def2 !important; }
+.periodicSquare .atomicName { color: #ccd6e8 !important; }
+
+/* The stage's main landmark (js/accessibility.js wraps the 3D canvas in it) takes no box of its own. */
+main#stage { display: contents; }

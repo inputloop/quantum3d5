@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum 3D5 — 3D Particle Simulator</title>
+    <meta name="description" content="Build atoms and molecules from protons, neutrons and electrons, and watch them bond, react and decay in 3D. A free teaching simulator for chemistry and physics.">
+    <meta name="color-scheme" content="dark light">
+    <script>
+        // Apply the light/dark theme before first paint, so light-mode users never see the dark UI
+        // flash while p5 loads: the theme they chose here, or else the one their system asks for.
+        try {
+            var saved = null;
+            try { saved = localStorage.getItem('quantum_theme'); } catch (_s) {}
+            var systemLight = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+            if (saved === 'light' || (saved === null && systemLight)) document.documentElement.setAttribute('data-theme', 'light');
+        } catch (_e) {}
+    </script>
+    <link rel="stylesheet" href="css/quantum3d5.css">
+    <link rel="stylesheet" href="css/accessibility.css">
+    <script src="vendor/p5/p5.min.js"></script>
+</head>
+<body>
+    <div class="visually-hidden" role="region" aria-labelledby="pageTitle"><h1 id="pageTitle">Quantum 3D5: a particle, atom and molecule simulator</h1></div>
+    <!-- Mobile slide-out drawer controls (hidden on desktop via CSS) -->
+    <button id="mobileToggle" title="Show controls" aria-label="Show controls">☰</button>
+    <div id="mobileBackdrop"></div>
+
+    <!-- Onboarding tour overlay (hidden unless tour is running) -->
+    <div id="tourOverlay">
+        <div id="tourDimmer"></div>
+        <div id="tourSpotlight"></div>
+        <div id="tourCard" role="dialog" aria-modal="true" aria-labelledby="tourTitle" aria-describedby="tourBody">
+            <h3 id="tourTitle">Welcome</h3>
+            <div class="tour-body" id="tourBody"></div>
+            <div class="tour-buttons">
+                <span class="tour-step-indicator" id="tourStepIndicator">1 / 7</span>
+                <button class="skip" id="tourSkip">Skip tour</button>
+                <button id="tourBack">Back</button>
+                <button class="primary" id="tourNext">Next</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="controls" role="complementary" aria-label="Simulation controls">
+        <button id="mobileDrawerClose" title="Close controls" aria-label="Close controls">×</button>
+
+        <!-- High-level "things to do" buttons, grouped at the top of the sidebar
+             so they're discoverable at a glance. Each opens a distinct panel
+             or experience. Kept visually consistent via the .feature-btn class. -->
+        <button id="tourStartBtn" class="feature-btn f-tour" title="Take a short guided tour of the simulator's main features.">🎓 Take the Tour</button>
+        <button id="toggleAchievementsBtn" class="feature-btn f-journal" title="Open your Study Journal — a running list of chemistry and physics concepts you can unlock by trying them in the sim. Each entry is a short lesson you've witnessed firsthand.">📓 Study Journal</button>
+        <button id="lessonsBtn" class="feature-btn f-lessons" title="Open the Guided Lessons panel — a library of scripted physics and chemistry walkthroughs. Each lesson builds a scene and narrates what's happening.">🎯 Guided Lessons</button>
+        <button id="toggleGraphsBtn" class="feature-btn f-graphs" title="Show/hide live graphs of temperature, energy, molecule counts, and particle-speed distribution.">📊 Graphs</button>
+        <button id="toggleDoubleSlitBtn" class="feature-btn f-doubleslit" title="Open the wave-optics double-slit demo — the classic experiment showing light's wave nature. Honest Fraunhofer-diffraction math, computed in 2D.">⚛ Double-Slit Demo</button>
+        <button id="toggleDiscoveriesBtn" class="feature-btn f-discoveries" title="Open the Potential Discoveries panel — shows unusual, unrecognized, or anomalous molecules the sim has produced, with explanations of why each is interesting.">🔬 Discoveries</button>
+        <button id="glossaryBtn" class="feature-btn f-glossary" title="Open the comprehensive glossary — every particle, element, and molecule in the simulator, searchable and filterable.">📖 Glossary</button>
+
+        <hr class="feature-stack-divider">
+
+        <div class="section-header" data-target="sec-add">Add Particles</div>
+        <div class="section-body" id="sec-add">
+            <button id="addElectron" title="Add a single electron (−) at a random spot">Electron (-)</button>
+            <button id="addProton" title="Add a single proton (+). Protons and neutrons close together will form a nucleus.">Proton (+)</button>
+            <button id="addNeutron" title="Add a single neutron (neutral). Helps hold nuclei together.">Neutron (0)</button>
+            <button id="addPositron" title="Add a positron (e⁺) — the antimatter partner of the electron. It will annihilate with any electron it meets.">Positron (+)</button>
+            <br>
+            <button id="addNaIon" title="Add a sodium ion Na⁺ (sodium atom missing one electron). Attracts Cl⁻ strongly.">Na⁺</button>
+            <button id="addClIon" title="Add a chloride ion Cl⁻ (chlorine atom with one extra electron). Attracts Na⁺.">Cl⁻</button>
+            <br>
+            <label for="atomSelect">Atom:</label>
+            <select id="atomSelect" title="Pick an element from the periodic table"></select>
+            <label for="isotopeN" title="Extra neutrons to add beyond the default for this element. Positive = heavier isotope; negative = lighter. Useful for creating unstable nuclei that will decay.">ΔN:</label>
+            <input type="number" id="isotopeN" value="0" step="1" title="Extra neutrons (isotope offset). Default 0 = most common isotope.">
+            <button id="addSelectedAtom" title="Add the selected element as a full atom with nucleus and electrons">Add</button>
+            <br>
+            <label for="moleculeSelect">Molecule:</label>
+            <select id="moleculeSelect" title="Pick a pre-built molecule to drop into the sim"></select>
+            <button id="addSelectedMolecule" title="Add the selected molecule, fully assembled with correct bond geometry">Add</button>
+            <br>
+            <button id="randomFill" title="Spray 80-250 random protons/neutrons/electrons into the space. Great for chaos.">Random Fill</button>
+            <br>
+            <label for="shineWavelength" title="Wavelength of photons emitted by the Shine Light button. 400–700 nm is visible light (violet → red). Below 400 is UV, above 700 is infrared. Shorter wavelength = higher energy.">λ:</label>
+            <!-- min lowered from 200 to 90 nm so ground-state hydrogen (Lyman series, 91-122 nm)
+                 can absorb; step 1 (was 10, which also silently snapped the 532 default to 530) -->
+            <input type="range" id="shineWavelength" min="90" max="800" step="1" value="532" title="Photon wavelength in nanometers. 532 = green (laser pointer color). 122 = hydrogen's Lyman-alpha line (ultraviolet). Use the arrow keys for 1 nm steps.">
+            <span id="shineWavelengthValue">532 nm</span>
+            <button id="shineLight" title="Emit a burst of 12 photons from the origin, flying outward in all directions at the chosen wavelength. Useful for seeing the traveling-photon visualization immediately.">💡 Shine Light</button>
+            <br>
+            <label for="shineMode" title="How Shine Light behaves">Mode:</label>
+            <select id="shineMode" title="Burst = single 12-photon pop radiating outward. Beam = steady stream of photons from left to right (good for absorption demos). Continuous = keep emitting bursts automatically every ~0.5s (fire-and-forget).">
+                <option value="burst">Burst</option>
+                <option value="beam">Beam (→)</option>
+                <option value="continuous">Continuous</option>
+            </select>
+            <input type="checkbox" id="continuousLightCheckbox" title="When ON, the sim automatically emits photons at the chosen wavelength and mode every few frames. Fire-and-forget.">
+            <label for="continuousLightCheckbox">Auto-emit</label>
+        </div>
+
+        <div class="section-header" data-target="sec-presets">Presets</div>
+        <div class="section-body collapsed" id="sec-presets">
+            <button class="presetBtn" data-preset="hydrogenCloud">H₂ Gas Cloud</button>
+            <button class="presetBtn" data-preset="saltFormation">Ionic Mix (Na + Cl)</button>
+            <button class="presetBtn" data-preset="waterCluster">Water Cluster</button>
+            <button class="presetBtn" data-preset="plasma">Plasma (hot ions)</button>
+            <button class="presetBtn" data-preset="crystalSalt">NaCl Crystal Lattice</button>
+            <button class="presetBtn" data-preset="fusionSoup">Nucleon Soup (hot)</button>
+        </div>
+
+        <div class="section-header" data-target="sec-sim">Simulation</div>
+        <div class="section-body" id="sec-sim">
+            <button id="pauseBtn" title="Pause/resume physics. The camera still works while paused. Shortcut: Space">Pause</button>
+            <button id="stepBtn" disabled title="While paused, advance the sim by exactly one step. Useful for watching a collision frame-by-frame. Shortcut: N">Step</button>
+            <button id="resetCameraBtn" title="Reset the camera to default position and orientation. Shortcut: R">📷</button>
+            <button id="snapshotBtn" title="Save a PNG snapshot of the 3D view (the canvas only; floating labels are HTML and are not included). Shortcut: P">📸</button>
+            <br>
+            <label for="speedSlider" title="Physics time-scale multiplier. 0.1× = slow motion for watching collisions, 3× = fast-forward for equilibrium.">Speed:</label>
+            <input type="range" id="speedSlider" min="0.1" max="3" step="0.1" value="1">
+            <span id="speedValue">1.0×</span>
+            <br>
+            <input type="checkbox" id="unbreakableCheckbox" title="Prevent any bond from breaking regardless of stretch or temperature. Good for preserving structures while you experiment.">
+            <label for="unbreakableCheckbox">Unbreakable Bonds</label>
+            <br>
+            <input type="checkbox" id="verletCheckbox" checked title="Use velocity Verlet integration (more accurate, conserves energy better). Uncheck for simpler semi-implicit Euler.">
+            <label for="verletCheckbox">Verlet Integration</label>
+            <br>
+            <input type="checkbox" id="containmentCheckbox" checked title="Keep everything inside an invisible sphere (radius 420) with elastic walls. Without it, gas and loose particles drift out of view forever and rarely meet, so reactions stall. The faint rings show the wall.">
+            <label for="containmentCheckbox">Containment Sphere</label>
+        </div>
+
+        <div class="section-header" data-target="sec-display">Display</div>
+        <div class="section-body" id="sec-display">
+            <input type="checkbox" id="lightModeCheckbox" title="Switch the UI to a light theme — good for daytime use, classroom projectors, and textbook screenshots. The 3D canvas itself stays dark (atoms are color-calibrated for black backgrounds).">
+            <label for="lightModeCheckbox">☀️ Light Mode</label>
+            <br>
+            <input type="checkbox" id="labelsCheckbox" checked title="Show atom/molecule/particle labels floating over each item in the 3D view">
+            <label for="labelsCheckbox">Floating Labels</label>
+            <br>
+            <input type="checkbox" id="showBondsCheckbox" checked title="Draw gray lines between bonded atoms; parallel lines for double/triple bonds">
+            <label for="showBondsCheckbox">Bonds</label>
+            <br>
+            <input type="checkbox" id="showShellsCheckbox" checked title="Draw faint blue spheres at each electron shell radius around atoms">
+            <label for="showShellsCheckbox">Electron Shells</label>
+            <br>
+            <input type="checkbox" id="showVelocityCheckbox" checked title="Draw green arrows showing the direction and speed of moving particles">
+            <label for="showVelocityCheckbox">Velocity Vectors</label>
+            <br>
+            <input type="checkbox" id="showGridCheckbox" checked title="Show the reference grid on the XY plane and the colored X/Y/Z axes">
+            <label for="showGridCheckbox">Grid</label>
+            <br>
+            <input type="checkbox" id="showTrailsCheckbox" title="Leave a fading color trail behind moving particles so you can see where they've been">
+            <label for="showTrailsCheckbox">Trails</label>
+            <br>
+            <input type="checkbox" id="showPhaseColoringCheckbox" checked title="Tint each nucleus based on its computed phase: blue for solid (held in place), teal for liquid (close-packed, mobile), normal for gas, magenta for plasma (hot ionized). Cool a water cluster to see it turn blue; heat gas until atoms ionize to see plasma pink.">
+            <label for="showPhaseColoringCheckbox">Phase Coloring</label>
+            <br>
+            <input type="checkbox" id="showPhotonsCheckbox" checked title="Show photons at all — both the stationary event flashes and the traveling photons">
+            <label for="showPhotonsCheckbox">Photons</label>
+            <br>
+            <input type="checkbox" id="travelingPhotonsCheckbox" checked title="Spawn real traveling photons at emission events (electron binding, nuclear decay, e⁻/e⁺ annihilation). They fly through space at the sim's speed of light and carry wavelength + polarization.">
+            <label for="travelingPhotonsCheckbox">Traveling Photons</label>
+            <br>
+            <input type="checkbox" id="photonWiggleCheckbox" checked title="Render each traveling photon as a sinusoidal wiggle whose period equals its wavelength and whose direction shows its polarization. CARTOON: the wiggle teaches wavelength and polarization honestly, but does NOT give real wave behavior (no interference or diffraction).">
+            <label for="photonWiggleCheckbox">Wiggle Visualization</label>
+            <br>
+            <input type="checkbox" id="showLonePairsCheckbox" title="Show pale purple lobes for lone pairs on water and ammonia — helps you see the full 3D shape">
+            <label for="showLonePairsCheckbox">Lone Pairs</label>
+            <br>
+            <input type="checkbox" id="tempTintCheckbox" title="Tint the background color based on average temperature: blue-cool, red-hot">
+            <label for="tempTintCheckbox">Temp Tint BG</label>
+            <br>
+            <label for="colorMode" title="Recolor every particle by a chosen value instead of by particle type">Color by:</label>
+            <select id="colorMode" title="Recolor particles. Type: normal colors. Speed/KE: blue=slow/cool, red=fast/hot. Charge: red=+, blue=−.">
+                <option value="type">Type (default)</option>
+                <option value="speed">Speed</option>
+                <option value="ke">Kinetic Energy</option>
+                <option value="charge">Charge</option>
+            </select>
+            <br>
+            <button id="toggleUnknownPanelBtn" title="Show/hide the panel listing any molecules the sim forms that aren't in the info database">⚠ Unknowns</button>
+        </div>
+
+        <div class="section-header" data-target="sec-physics">Physics</div>
+        <div class="section-body" id="sec-physics">
+            <span title="A constant electric push in any direction. Charged particles feel a force in that direction (positives one way, negatives the other).">Electric Field:</span><br>
+            <label for="efieldX">Ex:</label> <input type="number" id="efieldX" value="0" step="0.01" title="Strength of the electric field along the X axis">
+            <label for="efieldY">Ey:</label> <input type="number" id="efieldY" value="0" step="0.01" title="Strength of the electric field along the Y axis">
+            <label for="efieldZ">Ez:</label> <input type="number" id="efieldZ" value="0" step="0.01" title="Strength of the electric field along the Z axis">
+            <br>
+            <span title="A constant magnetic field. Moving charged particles curve perpendicular to both their velocity and the field — the Lorentz force.">Magnetic Field:</span><br>
+            <label for="bfieldX">Bx:</label> <input type="number" id="bfieldX" value="0" step="0.01" title="Strength of the magnetic field along the X axis. Charges moving perpendicular to this curve in spirals.">
+            <label for="bfieldY">By:</label> <input type="number" id="bfieldY" value="0" step="0.01">
+            <label for="bfieldZ">Bz:</label> <input type="number" id="bfieldZ" value="0" step="0.01">
+            <br>
+            <label for="gravitySlider" title="How strongly every particle gravitationally pulls on every other. Real atomic gravity is tiny; cranked up here for demo value. Default: 0 (off).">Gravity (G):</label>
+            <input type="range" id="gravitySlider" min="0" max="0.5" step="0.001" value="0">
+            <span id="gravityValue">0.000</span>
+            <br>
+            <input type="checkbox" id="legacySignsCheckbox" title="Restore the original (pre-fix) force directions: like charges attract, gravity repels for positive G, and van der Waals pulls neutral atoms into overlap. Leave unchecked for physically correct signs.">
+            <label for="legacySignsCheckbox">Legacy force signs</label>
+            <br>
+            <label for="tempSlider" title="Target temperature the thermostat tries to maintain. Higher = faster-moving particles = more bond breaks and dissociation. Default 0.3 is cool enough for molecules to hold together.">Target Temp:</label>
+            <input type="range" id="tempSlider" min="0" max="30" step="0.1" value="0.3">
+            <span id="tempValue">0.3</span>
+        </div>
+
+        <div class="section-header" data-target="sec-realism">Realism</div>
+        <div class="section-body" id="sec-realism">
+            <input type="checkbox" id="realOrbitalsCheckbox" checked title="Real electrons don't orbit like planets — they live in cloud-shaped regions (s, p, d orbitals). Turn on to see proper probability clouds.">
+            <label for="realOrbitalsCheckbox">Quantum Orbitals</label>
+            <br>
+            <input type="checkbox" id="angleBendingCheckbox" checked title="Forces that push bonded atoms toward their natural bond angles. Water at 104.5°, methane at 109.5°, etc.">
+            <label for="angleBendingCheckbox">Bond Angle Forces</label>
+            <br>
+            <input type="checkbox" id="morsePotentialCheckbox" checked title="Bonds use the Morse potential instead of simple springs. More realistic: very stiff when squeezed, lets go when stretched too far.">
+            <label for="morsePotentialCheckbox">Morse Potential</label>
+            <br>
+            <input type="checkbox" id="absorptionCheckbox" checked title="Photons whose energy matches an electron's shell transition (hydrogen-like levels) can be absorbed by nearby atoms, lifting an electron to a higher shell. The excited electron later drops back and emits a photon at the same wavelength. Try it: shine green (532 nm) at hydrogen and it passes straight through; shine ultraviolet at 122 nm (Lyman-alpha) and it is absorbed and re-emitted. Atoms with electrons in shell 2 also absorb the visible Balmer lines (656, 486, 434, 410 nm).">
+            <label for="absorptionCheckbox">Photon Absorption</label>
+            <br>
+            <input type="checkbox" id="ballisticCheckbox" checked title="Skip the short-range pairwise force loop for isolated particles (no neighbor within short-range reach). Long-range Coulomb and gravity still act on them through their own exact passes. Big speedup in spread-out scenes (gas clouds, scattered matter). The stats bubble shows how many particles take the fast path each tick.">
+            <label for="ballisticCheckbox">Ballistic Fast-Path</label>
+            <br>
+            <input type="checkbox" id="hydrogenBondCheckbox" checked title="Directional hydrogen bonds: weak attraction between a hydrogen covalently bonded to O/N/F and ANOTHER nearby O/N/F, preferring a linear O-H···O geometry. This is why water sticks to itself, why ice floats, and why DNA holds its shape.">
+            <label for="hydrogenBondCheckbox">Hydrogen Bonding</label>
+            <br>
+            <input type="checkbox" id="nuclearDecayCheckbox" title="Unstable nuclei spit out alpha (He-4) or beta (electron) particles. Half-lives are compressed so you can see decay happen in seconds.">
+            <label for="nuclearDecayCheckbox">Radioactive Decay</label>
+            <br>
+            <input type="checkbox" id="tunnelingCheckbox" title="Bound electrons occasionally teleport to a different spot in their orbital — a cartoon of quantum tunneling.">
+            <label for="tunnelingCheckbox">Electron Tunneling</label>
+            <br>
+            <input type="checkbox" id="trueScaleCheckbox" title="Draw nuclei much smaller to approximate the real atom/nucleus size ratio (about 100,000:1). Physics is unchanged; only visuals shrink.">
+            <label for="trueScaleCheckbox">True-Scale Atoms</label>
+        </div>
+
+        <hr>
+        <div class="scene-io-row">
+            <button id="saveSceneBtn" class="scene-io-btn" title="Save the current scene (particles, bonds, temperature, physics settings) to a file on your computer. You can reload it later with Load Scene.">💾 Save Scene</button>
+            <button id="loadSceneBtn" class="scene-io-btn" title="Load a previously-saved scene file. Replaces the current scene with the one from disk.">📂 Load Scene</button>
+        </div>
+        <!-- Hidden file input that Load Scene triggers -->
+        <input type="file" id="loadSceneFileInput" accept=".json,.quantum,application/json" style="display:none">
+        <button id="clear">Clear All</button>
+    </div>
+
+    <div id="labelLayer"></div>
+    <div id="statsBubble" role="status" aria-live="off" aria-label="Live statistics">FPS: -- | Particles: 0</div>
+    <button id="helpBtn">? What am I looking at?</button>
+    <div id="info" role="region" aria-label="Simulation readout"> Loading... <br> Controls: Drag=Orbit, Wheel=Zoom, R-Drag=Pan </div>
+    <div id="logBoxHtml" role="log" aria-live="polite" aria-label="Event log"></div>
+    <div id="entityList" role="region" aria-label="Entities on the stage"><h4 aria-level="2">Entities:</h4><ul><li>Loading...</li></ul></div>
+
+    <!-- Unknown-molecules panel. Auto-populates whenever the sim produces
+         a Hill-style label that isn't in the info-modal knowledge base.
+         Toggle from the Display controls panel or the × on the panel itself. -->
+    <!-- Starts hidden; opens by itself the first time an unknown label appears. -->
+    <div id="unknownPanel" class="hidden" role="region" aria-label="Unknown molecules">
+        <header>
+            <h4 aria-level="2">⚠ Unknown molecules</h4>
+            <button class="hideBtn" id="unknownPanelHide" title="Hide this panel (you can re-open it from the Display controls on the left)">×</button>
+        </header>
+        <div class="hint">Labels the sim produced that aren't in the info database yet. Click any line to copy it for patching.</div>
+        <ul id="unknownPanelList"><li class="empty">(nothing yet — interesting reactions will show up here)</li></ul>
+        <button class="copyAllBtn" id="unknownPanelCopyAll" title="Copy all unknown labels (with compositions) to the clipboard">Copy all to clipboard</button>
+        <div class="copyFeedback" id="unknownPanelFeedback"></div>
+    </div>
+
+    <!-- Potential Discoveries panel. Categorizes interesting events from this
+         session: unrecognized molecules, real-world-unusual compounds, genuine
+         anomalies. Honest framing in the caveat. -->
+    <div id="discoveriesPanel" role="region" aria-label="Potential discoveries">
+        <h5 aria-level="2">🔬 Potential Discoveries <button class="closeBtn" id="discoveriesClose">×</button></h5>
+        <div class="caveat">
+            The sim is cartoon physics — these flags aren't real discoveries, they're pattern-matches against known chemistry. Click any row for details on its elements.
+        </div>
+        <div class="filter-row">
+            <button data-filter="all" class="active">All</button>
+            <button data-filter="unknown">🔬 Unknown</button>
+            <button data-filter="notable">📘 Notable</button>
+            <button data-filter="anomaly">⚠️ Anomaly</button>
+        </div>
+        <div id="discoveriesList"><div class="empty">(no discoveries yet — run the sim and watch for flagged events)</div></div>
+        <button class="clearBtn" id="discoveriesClear" title="Clear the discoveries list for this session">Clear session log</button>
+    </div>
+
+    <!-- Achievements / Study Guide panel. Toasts pop up when new ones unlock;
+         this panel shows the full list of locked + unlocked items. -->
+    <div id="achievementsPanel" role="region" aria-label="Study journal">
+        <h5 aria-level="2">📓 Study Journal <button class="closeBtn" id="achievementsClose">×</button></h5>
+        <div class="progress-bar-wrap">
+            <div class="progress-bar-fill" id="achievementsProgressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-label" id="achievementsProgressLabel">0 / 0 recorded</div>
+        <div id="achievementsList"></div>
+        <button class="reset-btn" id="achievementsReset" title="Clear all journal entries and start over — you'll be able to re-earn them all by interacting with the sim">Clear all journal entries</button>
+    </div>
+
+    <!-- Toast stack. Achievements that unlock slide in here. -->
+    <div id="achievementToastStack" role="status" aria-live="polite" aria-label="New journal entries"></div>
+
+    <!-- Lessons list panel — browse available lessons and pick one -->
+    <div id="lessonsListPanel" role="region" aria-label="Guided lessons">
+        <h4 aria-level="2">🎯 Guided Lessons <button class="closeBtn" id="lessonsListClose">×</button></h4>
+        <div class="intro">Scripted walkthroughs of chemistry and physics concepts. Each lesson builds a scene and explains what's happening as it unfolds. You can still pan, zoom, and interact freely.</div>
+        <div id="lessonsListContainer"></div>
+    </div>
+
+    <!-- In-progress lesson panel — one step at a time -->
+    <div id="lessonPanel" role="region" aria-label="Current lesson">
+        <h4 aria-level="2" id="lessonHeaderTitle">Lesson <button class="closeBtn" id="lessonPanelClose">×</button></h4>
+        <div class="lesson-progress-bar"><div class="lesson-progress-fill" id="lessonProgressFill"></div></div>
+        <div class="lesson-step-num" id="lessonStepNum">Step 1 of 1</div>
+        <div class="lesson-step-title" id="lessonStepTitle">—</div>
+        <div class="lesson-step-body" id="lessonStepBody">—</div>
+        <div class="lesson-waiting" id="lessonWaiting" style="display:none"></div>
+        <div class="lesson-nav">
+            <button class="exit" id="lessonBtnExit" title="End the lesson and leave the scene as-is">Exit</button>
+            <button id="lessonBtnPrev">← Back</button>
+            <button class="primary" id="lessonBtnNext">Continue →</button>
+        </div>
+    </div>
+
+    <!-- Right-click particle inspector -->
+    <div id="inspector">
+        <h5 aria-level="2">
+            <span id="inspectorTitle">Particle</span>
+            <button class="closeBtn" id="inspectorClose">×</button>
+        </h5>
+        <div id="inspectorBody"></div>
+        <div id="inspectorActions" style="margin-top: 6px;"></div>
+    </div>
+
+    <!-- Live graphs panel (toggleable) -->
+    <div id="graphsPanel" role="region" aria-label="Live graphs">
+        <h5 aria-level="2">Live Data <button class="closeBtn" id="graphsClose">×</button></h5>
+        <div class="graphLabel"><span>Temperature (Avg KE)</span><span id="graphTempNow">0.0</span></div>
+        <canvas id="graphTemp"></canvas>
+        <div class="graphLabel mbLabel" title="Distribution of particle speeds. The dashed curve is the theoretical Maxwell–Boltzmann distribution at the current temperature. When your system reaches thermal equilibrium, the bars should closely hug the curve."><span>Speed Distribution (Maxwell–Boltzmann)</span><span id="graphMBNow">v̄ = 0.0</span></div>
+        <canvas id="graphMB"></canvas>
+        <div class="graphLabel"><span>Total Kinetic Energy</span><span id="graphEnergyNow">0.0</span></div>
+        <canvas id="graphEnergy"></canvas>
+        <div class="graphLabel"><span>Molecule / Nucleus Counts</span><span id="graphCountsNow">0 / 0</span></div>
+        <canvas id="graphCounts"></canvas>
+    </div>
+
+    <!-- Double-slit demo panel (Young's experiment, wave-mode) -->
+    <div id="doubleSlitPanel" role="region" aria-label="Double-slit demonstration">
+        <h5 aria-level="2">⚛ Double-Slit Demo <button class="closeBtn" id="doubleSlitClose">×</button></h5>
+        <div class="caveat">
+            <strong>Wave Mode</strong> — this panel computes Fraunhofer diffraction using the honest wave-optics formula. It's a <em>separate</em> visualization from the 3D particle photons, which can't do real wave physics. Drag the sliders and watch the interference pattern change.
+        </div>
+        <canvas id="doubleSlitCanvas"></canvas>
+        <div class="mode-tabs">
+            <button data-mode="two" class="active">Both slits (interference)</button>
+            <button data-mode="one">One slit only</button>
+            <button data-mode="particles">Particle hits</button>
+        </div>
+        <div class="controls-row">
+            <label for="dsWavelength" title="Wavelength of the light passing through the slits">λ:</label>
+            <input type="range" id="dsWavelength" min="380" max="780" step="10" value="500">
+            <span class="val" id="dsWavelengthVal">500 nm</span>
+        </div>
+        <div class="controls-row">
+            <label for="dsSlitSep" title="Distance between the two slits (center-to-center). Smaller = fringes spread apart; larger = fringes bunch together.">Slit sep d:</label>
+            <input type="range" id="dsSlitSep" min="2000" max="20000" step="500" value="8000">
+            <span class="val" id="dsSlitSepVal">8 μm</span>
+        </div>
+        <div class="controls-row">
+            <label for="dsSlitWidth" title="Width of each individual slit. Wider slit = diffraction envelope narrows; narrower slit = envelope broadens.">Slit width a:</label>
+            <input type="range" id="dsSlitWidth" min="500" max="5000" step="100" value="2000">
+            <span class="val" id="dsSlitWidthVal">2 μm</span>
+        </div>
+        <div class="controls-row">
+            <label for="dsScreen" title="Distance from the slits to the screen. Larger = fringes spread out.">Screen L:</label>
+            <input type="range" id="dsScreen" min="20" max="200" step="5" value="100">
+            <span class="val" id="dsScreenVal">100 mm</span>
+        </div>
+    </div>
+
+    <!-- Reaction log filters -->
+    <div id="logFilters" role="region" aria-label="Event log filters">
+        <span>Log:</span>
+        <input type="checkbox" id="logFilterBonds" checked><label for="logFilterBonds" title="Bond formation and breaking events">Bonds</label>
+        <input type="checkbox" id="logFilterDecay" checked><label for="logFilterDecay" title="Radioactive decay events">Decay</label>
+        <input type="checkbox" id="logFilterBinding" checked><label for="logFilterBinding" title="Electrons being captured by nuclei">Bind</label>
+        <input type="checkbox" id="logFilterOther" checked><label for="logFilterOther" title="Everything else: additions, camera, setting changes">Other</label>
+    </div>
+
+    <!-- Touch hint for mobile users -->
+    <div id="touchHint">One-finger drag: rotate · Two-finger pinch: zoom · Two-finger drag: pan · Long press on particle: inspect</div>
+
+    <!-- Help modal (shown on demand) -->
+    <div id="helpModalBackdrop" aria-hidden="true">
+        <div id="helpModal" role="dialog" aria-modal="true" aria-labelledby="helpModalTitle">
+            <header>
+                <h2 id="helpModalTitle">What am I looking at?</h2>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <button id="helpRetakeTourBtn" style="background: linear-gradient(135deg, #3a5080, #4a6090); color: #fff; border: 1px solid #5a7090; border-radius: 4px; padding: 5px 11px; font-size: 12px; cursor: pointer; min-height: 28px;" title="Retake the guided tour of the simulator's main features">🎓 Retake Tour</button>
+                    <button class="closeX" aria-label="Close">×</button>
+                </div>
+            </header>
+            <div class="pageBody" id="helpPageBody"></div>
+            <footer>
+                <button class="nav-btn" id="helpPrevBtn">← Prev</button>
+                <div class="dots" id="helpDots"></div>
+                <span class="pageLabel" id="helpPageLabel">1 / 13</span>
+                <button class="nav-btn" id="helpNextBtn">Next →</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Glossary term popup (attached to body, shown on click of a .gloss term) -->
+    <div id="glossPopup" role="tooltip"></div>
+
+    <!-- Entity info modal — opens when a label or entity list item is clicked -->
+    <div id="infoModalBackdrop" aria-hidden="true">
+        <div id="infoModal" role="dialog" aria-modal="true" aria-labelledby="infoModalTitle">
+            <header>
+                <h2 id="infoModalTitle">Entity<span class="formula" id="infoModalFormula"></span></h2>
+                <button class="closeX" id="infoCloseX" aria-label="Close">×</button>
+            </header>
+            <div class="infoBody" id="infoBody"></div>
+            <footer>
+                <button class="closeBtn" id="infoCloseBtn">Close</button>
+            </footer>
+        </div>
+    </div>
+
+    <!-- Comprehensive glossary modal -->
+    <div id="glossaryBackdrop" aria-hidden="true">
+        <div id="glossaryModal" role="dialog" aria-modal="true" aria-labelledby="glossaryTitle">
+            <header>
+                <h2 id="glossaryTitle">📖 Glossary</h2>
+                <input type="text" id="glossarySearch" aria-label="Search the glossary" placeholder="Search by name, formula, symbol, or etymology…" autocomplete="off">
+                <button class="closeX" id="glossaryCloseX" aria-label="Close">×</button>
+            </header>
+            <div id="glossaryFilters">
+                <span class="filterLabel">Show:</span>
+                <span class="filterChip active" data-filter="all">All</span>
+                <span class="filterChip" data-filter="particles">Particles</span>
+                <span class="filterChip" data-filter="elements">Elements</span>
+                <span class="filterChip" data-filter="molecules">Molecules</span>
+                <span class="filterChip" data-filter="organics">Organics (contains C)</span>
+                <span class="filterChip" data-filter="inorganics">Inorganics (no C)</span>
+                <span class="filterChip" data-filter="nobleGas">Noble gases</span>
+                <span class="filterChip" data-filter="metals">Metals</span>
+                <span class="filterChip" data-filter="nonmetals">Nonmetals</span>
+                <span class="filterChip" data-filter="metalloids">Metalloids</span>
+                <span class="filterChip" data-filter="radicals">Radicals / exotics</span>
+                <select id="glossarySort" title="Sort order" aria-label="Sort order">
+                    <option value="category">Group by category</option>
+                    <option value="atomicNumber">By atomic number</option>
+                    <option value="alpha">Alphabetical</option>
+                </select>
+            </div>
+            <div id="glossaryBody" tabindex="0" role="region" aria-label="Glossary entries"></div>
+            <div id="glossaryFooter"><span id="glossaryCount">0 entries</span> · Click any card to open its detail modal · Press <kbd>Esc</kbd> to close</div>
+        </div>
+    </div>
+
+    <script src="js/quantum3d5.js"></script>
+    <script src="js/accessibility.js"></script>
+</body>
+</html>

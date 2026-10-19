@@ -1,0 +1,14 @@
+Quantum 3D5
+
+The simulator:
+    Bryant Frankford
+
+The project, its documentation, tests and accessibility work:
+    Bryant Frankford
+    Corwin Brust <corwin@bru.st>
+    Mentat (for Corwin, claude-opus-5-5)
+
+p5.js, kept in vendor/p5/, is by the Processing Foundation and the p5.js contributors.
+
+Part of the collection Corwin Brust and Bryant Frankford keep together:
+https://github.com/inputloop

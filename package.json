@@ -1,0 +1,20 @@
+{
+  "name": "quantum3d5",
+  "version": "1.0.0",
+  "description": "A 3D particle, atom and molecule simulator for learning chemistry and physics in the browser.",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "homepage": "https://github.com/inputloop/quantum3d5",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/inputloop/quantum3d5.git"
+  },
+  "scripts": {
+    "test": "python3 tools/function-index.py --check && python3 tools/build-single-file.py --check && python3 tests/smoke.py && python3 tests/smoke.py dist/quantum3d5.html && python3 tests/accessibility.py && python3 tests/scene_format.py",
+    "prove-red": "python3 tests/smoke.py --prove-red && python3 tests/accessibility.py --prove-red && python3 tests/scene_format.py --prove-red",
+    "build": "python3 tools/build-single-file.py && python3 tools/function-index.py"
+  },
+  "devDependencies": {
+    "axe-core": "4.10.2"
+  }
+}

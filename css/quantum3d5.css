@@ -1,0 +1,2389 @@
+        /* =====================================================================
+           THEME VARIABLES
+           =====================================================================
+           Default theme is dark (unset = dark). Adding data-theme="light" on
+           <html> swaps the palette for a light theme suitable for daytime use,
+           classroom projectors, and textbook screenshots.
+
+           The 3D canvas itself stays dark — atoms are color-calibrated against
+           black and rebalancing every particle for light backgrounds would be
+           a separate, much larger effort. Light mode gives a light SURROUND
+           (sidebar, panels, modals) framing the dark canvas. */
+        :root {
+            /* Base surfaces */
+            --surface-bg: rgba(50, 50, 50, 0.85);
+            --surface-border: #4a5060;
+            --panel-bg: rgba(40, 44, 56, 0.92);
+            --panel-solid: #2a2e3e;
+            --modal-bg: linear-gradient(135deg, #2a3450, #3a4560);
+            --modal-border: #6a7090;
+
+            /* Text */
+            --text-primary: #eee;
+            --text-secondary: #ccd;
+            --text-muted: #8a93a8;
+            --text-accent: #ffd37a;
+            --text-heading: #f3e8c4;
+
+            /* Inputs */
+            --input-bg: rgba(0, 0, 0, 0.35);
+            --input-border: #5a6488;
+            --input-focus-border: #8aa0c8;
+            --input-text: #fff;
+
+            /* Buttons */
+            --btn-bg: #4a5478;
+            --btn-bg-hover: #5a6488;
+            --btn-text: #fff;
+            --btn-border: #5a6488;
+            --btn-primary-bg: linear-gradient(135deg, #4a6a90, #5a7aa0);
+            --btn-primary-hover: linear-gradient(135deg, #5a7aa0, #6a8ab0);
+
+            /* Log / hover / muted areas */
+            --log-bg: rgba(30, 30, 30, 0.85);
+            --log-text: #ccc;
+            --hover-bg: rgba(255, 255, 255, 0.1);
+
+            /* Scrollbar, misc */
+            --scrollbar-thumb: #555;
+            --scrollbar-track: #2a2e3e;
+        }
+        html[data-theme="light"] {
+            --surface-bg: rgba(250, 250, 252, 0.96);
+            --surface-border: #c0c5d0;
+            --panel-bg: rgba(245, 248, 252, 0.97);
+            --panel-solid: #eaecf2;
+            --modal-bg: linear-gradient(135deg, #f2f4f9, #e4e8f0);
+            --modal-border: #9ba3b5;
+
+            --text-primary: #1a1e2e;
+            --text-secondary: #2a3040;
+            --text-muted: #6a7080;
+            --text-accent: #a06820;
+            --text-heading: #2e2812;
+
+            --input-bg: rgba(255, 255, 255, 0.9);
+            --input-border: #a8b0c0;
+            --input-focus-border: #5a70a0;
+            --input-text: #1a1e2e;
+
+            --btn-bg: #dde3ec;
+            --btn-bg-hover: #c8d0de;
+            --btn-text: #1a1e2e;
+            --btn-border: #a8b0c0;
+            --btn-primary-bg: linear-gradient(135deg, #5a7aa0, #4a6a90);
+            --btn-primary-hover: linear-gradient(135deg, #4a6a90, #3a5a80);
+
+            --log-bg: rgba(248, 250, 254, 0.95);
+            --log-text: #2a3040;
+            --hover-bg: rgba(0, 0, 0, 0.07);
+
+            --scrollbar-thumb: #b8c0d0;
+            --scrollbar-track: #e8ecf2;
+        }
+
+        body { margin: 0; overflow: hidden; font-family: sans-serif; background-color: #222; color: var(--text-primary);}
+        #controls { position: absolute; top: 10px; left: 10px; background: var(--surface-bg); padding: 10px; border-radius: 5px; z-index: 20; max-height: calc(100vh - 100px); /* stops above the #info box instead of sliding under it */ overflow-y: auto; width: 200px; color: var(--text-primary); border: 1px solid var(--surface-border); }
+        #entityList { position: absolute; top: 10px; right: 10px; background: var(--surface-bg); padding: 10px; border-radius: 5px; z-index: 15; max-height: 90vh; overflow-y: auto; width: 180px; font-size: 11px; color: var(--text-secondary); line-height: 1.4; box-sizing: border-box; cursor: default; border: 1px solid var(--surface-border); }
+        #entityList h4 { margin: 0 0 5px 0; padding: 0; font-size: 1.1em; color: var(--text-primary); border-bottom: 1px solid var(--surface-border); padding-bottom: 3px;}
+        #entityList ul { list-style: none; padding: 0; margin: 0; }
+        #entityList li { margin-bottom: 3px; cursor: pointer; padding: 2px 4px; border-radius: 2px; }
+        #entityList li:hover { background-color: var(--hover-bg); }
+        #entityList .category { margin-top: 8px; font-weight: bold; color: var(--text-muted); cursor: default;}
+        #entityList .category:hover { background-color: transparent; }
+
+        /* Unknown-molecules panel — lives below the entity list in the top-right.
+           Shows any Hill-style label the sim has emitted that isn't in the info
+           database, so the user can copy it over for a patch. */
+        #unknownPanel {
+            position: absolute;
+            top: 10px;
+            right: 200px;             /* left of the entity list */
+            width: 240px;
+            max-height: 60vh;
+            background: rgba(55, 40, 40, 0.88);
+            border: 1px solid #8a5a5a;
+            border-radius: 5px;
+            padding: 8px 10px;
+            z-index: 16;
+            font-size: 11px;
+            color: #f0dada;
+            line-height: 1.4;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+        }
+        #unknownPanel.hidden { display: none; }
+        #unknownPanel header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            border-bottom: 1px solid #8a5a5a;
+            padding-bottom: 3px;
+        }
+        #unknownPanel header h4 {
+            margin: 0;
+            padding: 0;
+            font-size: 12px;
+            font-weight: 600;
+            color: #ffd3b3;
+        }
+        #unknownPanel header .hideBtn {
+            background: transparent;
+            border: none;
+            color: #f0dada;
+            font-size: 16px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 0 4px;
+            margin: 0;
+        }
+        #unknownPanel header .hideBtn:hover { color: #fff; }
+        #unknownPanel .hint {
+            font-size: 10px;
+            color: #c8a6a6;
+            margin-bottom: 4px;
+            line-height: 1.3;
+        }
+        #unknownPanel ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            overflow-y: auto;
+            flex: 1;
+        }
+        #unknownPanel li {
+            padding: 3px 5px;
+            margin-bottom: 2px;
+            background: rgba(0, 0, 0, 0.18);
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 11px;
+            cursor: pointer;
+            color: #ffe9d0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 4px;
+        }
+        #unknownPanel li:hover { background: rgba(0, 0, 0, 0.32); color: #fff; }
+        #unknownPanel li .comp {
+            font-size: 9px;
+            color: #c8a6a6;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            flex-shrink: 0;
+        }
+        #unknownPanel .empty {
+            font-style: italic;
+            color: #c8a6a6;
+            font-size: 10px;
+            padding: 4px 2px;
+        }
+        #unknownPanel .copyAllBtn {
+            margin-top: 4px;
+            padding: 3px 8px;
+            background: rgba(140, 90, 60, 0.6);
+            border: 1px solid #a67a5a;
+            color: #ffe9d0;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            width: 100%;
+        }
+        #unknownPanel .copyAllBtn:hover { background: rgba(160, 105, 70, 0.7); }
+        #unknownPanel .copyAllBtn:active { background: rgba(120, 80, 55, 0.6); }
+        #unknownPanel .copyFeedback {
+            font-size: 10px;
+            color: #b0e0b0;
+            text-align: center;
+            margin-top: 3px;
+            min-height: 12px;
+        }
+
+        button { margin: 4px; padding: 5px 10px; background-color: #555; color: #eee; border: 1px solid #888; border-radius: 3px; cursor: pointer;}
+        button:hover { background-color: #777; }
+        button:active { background-color: #444; }
+        button:disabled { background-color: #444; color: #888; cursor: default; }
+        select { margin: 4px; padding: 5px; background-color: #555; color: #eee; border: 1px solid #888; border-radius: 3px; max-width: 180px; }
+        input[type=number] { width: 50px; margin: 2px; padding: 3px; background-color: #444; color: #eee; border: 1px solid #777; border-radius: 2px; }
+        input[type=range] { width: 100px; vertical-align: middle; cursor: pointer; }
+        input[type=checkbox] { vertical-align: middle; margin: 0 2px 0 0; cursor: pointer;}
+        label { font-size: 0.9em; margin-left: 5px; vertical-align: middle;}
+        hr { border: 0; border-top: 1px solid #666; margin: 8px 0; }
+        #info { position: absolute; bottom: 10px; left: 10px; font-size: 12px; color: #ccc; background: rgba(50, 50, 50, 0.8); padding: 5px 8px; border-radius: 3px; z-index: 20; min-width: 280px;}
+        #logBoxHtml { position: absolute; bottom: 10px; right: 10px; width: 350px; height: 85px; background-color: var(--log-bg); border-radius: 3px; padding: 5px; font-family: monospace; font-size: 10px; color: var(--log-text); overflow-y: auto; z-index: 15; pointer-events: none; line-height: 1.4; box-sizing: border-box; border: 1px solid var(--surface-border); }
+        canvas { display: block; z-index: 1;}
+
+        /* Light theme overrides for base form elements */
+        html[data-theme="light"] button { background-color: #dde3ec; color: #1a1e2e; border: 1px solid #a8b0c0; }
+        html[data-theme="light"] button:hover { background-color: #c8d0de; }
+        html[data-theme="light"] button:active { background-color: #b0b8c8; }
+        html[data-theme="light"] button:disabled { background-color: #e8ebef; color: #8a95a8; }
+        html[data-theme="light"] select { background-color: #f5f6fa; color: #1a1e2e; border: 1px solid #a8b0c0; }
+        html[data-theme="light"] input[type=number] { background-color: #fff; color: #1a1e2e; border: 1px solid #a8b0c0; }
+        html[data-theme="light"] input[type=text] { background-color: #fff; color: #1a1e2e; border: 1px solid #a8b0c0; }
+        html[data-theme="light"] hr { border-top: 1px solid #b8c0ce; }
+        html[data-theme="light"] #info { background: var(--surface-bg); color: var(--text-secondary); border: 1px solid var(--surface-border); }
+
+        /* Collapsible section headers */
+        .section-header { cursor: pointer; user-select: none; padding: 3px 5px; margin: 4px -5px 2px -5px; background-color: rgba(80, 80, 80, 0.5); border-radius: 3px; font-size: 0.9em; font-weight: bold; color: var(--text-accent); }
+        .section-header:hover { background-color: rgba(100, 100, 100, 0.6); }
+        html[data-theme="light"] .section-header { background-color: rgba(170, 180, 200, 0.55); color: var(--text-heading); }
+        html[data-theme="light"] .section-header:hover { background-color: rgba(150, 160, 180, 0.7); }
+        .section-header::before { content: "▼ "; font-size: 0.8em; display: inline-block; transition: transform 0.15s; }
+        .section-header.collapsed::before { transform: rotate(-90deg); }
+        .section-body { padding: 2px 0; }
+        .section-body.collapsed { display: none; }
+
+        /* Floating 3D labels (HTML overlay driven by projected coords) */
+        #labelLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; overflow: hidden; }
+        .floatLabel {
+            position: absolute;
+            transform: translate(-50%, -100%);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            background: rgba(20, 20, 30, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            padding: 1px 5px;
+            border-radius: 3px;
+            white-space: nowrap;
+            pointer-events: auto;
+            cursor: pointer;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            line-height: 1.25;
+            transition: transform 0.08s ease-out, background-color 0.08s ease-out, box-shadow 0.08s ease-out;
+        }
+        .floatLabel:hover {
+            transform: translate(-50%, -100%) scale(1.15);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+            filter: brightness(1.15);
+            z-index: 11;
+        }
+        .floatLabel.molecule { background: rgba(80, 50, 20, 0.8); border-color: rgba(255, 200, 100, 0.35); color: #ffe9b0; font-size: 11px; }
+        .floatLabel.nucleus  { background: rgba(30, 50, 80, 0.8); border-color: rgba(120, 180, 255, 0.3); color: #cce4ff; }
+        .floatLabel.particle { font-size: 9px; opacity: 0.85; }
+
+        /* Entity info modal — opens when user clicks an entity label or list item */
+        #infoModalBackdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 110;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        }
+        #infoModalBackdrop.open { display: flex; }
+        #infoModal {
+            width: min(560px, 92vw);
+            max-height: 86vh;
+            background: #2a2e3a;
+            color: #e8e8ec;
+            border: 1px solid #4a5060;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        #infoModal header {
+            padding: 14px 20px;
+            background: linear-gradient(to right, #3a4258, #2e3545);
+            border-bottom: 1px solid #4a5060;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #infoModal header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #f3e8c4;
+        }
+        #infoModal header h2 .formula {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            color: #cce4ff;
+            margin-left: 8px;
+            font-weight: 500;
+            font-size: 15px;
+        }
+        #infoModal header .closeX {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            margin: 0;
+        }
+        #infoModal header .closeX:hover { color: #fff; }
+        #infoModal .infoBody {
+            flex: 1;
+            padding: 18px 22px;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        #infoModal .infoBody .alsoKnown {
+            font-size: 13px;
+            color: #b8c2d4;
+            font-style: italic;
+            margin: 0 0 10px 0;
+        }
+        #infoModal .infoBody p { margin: 0 0 10px 0; }
+        #infoModal .infoBody h4 {
+            margin: 14px 0 4px 0;
+            font-size: 13px;
+            font-weight: 600;
+            color: #ffd37a;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        #infoModal .infoBody .factGrid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 4px 12px;
+            font-size: 13px;
+            background: rgba(0, 0, 0, 0.18);
+            padding: 8px 10px;
+            border-radius: 4px;
+            border: 1px solid #3a4050;
+            margin: 4px 0 10px 0;
+        }
+        #infoModal .infoBody .factGrid .k { color: #a9b4c6; }
+        #infoModal .infoBody .factGrid .v { color: #e8e8ec; }
+        #infoModal footer {
+            padding: 10px 20px;
+            background: #242834;
+            border-top: 1px solid #4a5060;
+            display: flex;
+            justify-content: flex-end;
+        }
+        #infoModal footer .closeBtn {
+            background: linear-gradient(135deg, #5a6880, #4a5470);
+            border: 1px solid #6a7890;
+            color: #fff;
+            padding: 6px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        #infoModal footer .closeBtn:hover { background: linear-gradient(135deg, #6a7890, #5a6480); }
+
+        /* FPS / stats bubble */
+        /* pointer-events on (was none) so the ballistic and sim-time tooltips can show */
+        #statsBubble { position: absolute; top: 10px; left: 50%; transform: translateX(-50%); font-size: 11px; color: #bbb; background: rgba(40, 40, 40, 0.75); padding: 3px 10px; border-radius: 12px; z-index: 20; font-family: monospace; pointer-events: auto; cursor: default; }
+        #statsBubble .sbHidden { display: none; }
+        #statsBubble .good { color: #8f8; }
+        #statsBubble .warn { color: #fd6; }
+        #statsBubble .bad { color: #f77; }
+        #statsBubble .simTime { color: #ad9; margin-left: 6px; }
+        #statsBubble .phaseTag.phase-solid   { color: #cce6ff; background: rgba(120,160,200,0.25); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+        #statsBubble .phaseTag.phase-liquid  { color: #b8d4f0; background: rgba(80,130,180,0.28); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+        #statsBubble .phaseTag.phase-gas     { color: #e0d090; background: rgba(140,120,50,0.25); padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+        #statsBubble .phaseTag.phase-plasma  { color: #ffb0c4; background: rgba(180,60,100,0.3);  padding: 1px 6px; border-radius: 8px; margin-left: 4px; }
+
+        /* Maxwell–Boltzmann histogram overlay (sits inside the Graphs panel) */
+        .graphLabel.mbLabel { color: #f0d080; }
+
+        /* Preset buttons */
+        .presetBtn { display: block; width: 100%; margin: 3px 0; padding: 5px; background: linear-gradient(to right, #3a4a5f, #4a5a7a); border: 1px solid #6a7a9a; color: #def; text-align: left; font-size: 0.85em; border-radius: 3px; cursor: pointer; }
+        .presetBtn:hover { background: linear-gradient(to right, #4a5a7a, #5a6a9a); }
+
+        /* "What am I looking at?" help button */
+        #helpBtn {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%) translateY(28px); /* below stats bubble */
+            z-index: 21;
+            background: linear-gradient(135deg, #7a5a2a, #a07530);
+            color: #fff;
+            border: 1px solid #c89550;
+            padding: 6px 14px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+            letter-spacing: 0.02em;
+        }
+        #helpBtn:hover { background: linear-gradient(135deg, #8a6a35, #b58540); }
+        #helpBtn:active { transform: translateX(-50%) translateY(29px); }
+
+        /* Glossary button styling is now inherited from the .feature-btn class
+           (see above). The old top-center floating position has been retired. */
+
+        /* Glossary modal — large, searchable, filterable reference */
+        #glossaryBackdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 105;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        #glossaryBackdrop.open { display: flex; }
+        #glossaryModal {
+            width: min(1100px, 95vw);
+            height: min(800px, 92vh);
+            background: #242833;
+            color: #e8e8ec;
+            border: 1px solid #4a5060;
+            border-radius: 10px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        #glossaryModal header {
+            padding: 14px 20px;
+            background: linear-gradient(to right, #2d3a52, #1f2a3e);
+            border-bottom: 1px solid #4a5060;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 14px;
+            flex-shrink: 0;
+        }
+        #glossaryModal header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #b6d4ff;
+            flex-shrink: 0;
+        }
+        #glossarySearch {
+            flex: 1;
+            padding: 7px 12px;
+            background: #1a1f2c;
+            color: #fff;
+            border: 1px solid #4a5a7a;
+            border-radius: 16px;
+            font-size: 13px;
+            outline: none;
+        }
+        #glossarySearch:focus { border-color: #6a8ac0; box-shadow: 0 0 0 2px rgba(120, 150, 200, 0.3); }
+        #glossarySearch::placeholder { color: #7a8698; }
+        #glossaryModal header .closeX {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            margin: 0;
+            flex-shrink: 0;
+        }
+        #glossaryModal header .closeX:hover { color: #fff; }
+        #glossaryFilters {
+            padding: 10px 20px;
+            border-bottom: 1px solid #3a4050;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            background: #1e2330;
+            flex-shrink: 0;
+            align-items: center;
+        }
+        #glossaryFilters .filterLabel {
+            font-size: 11px;
+            color: #8a96a8;
+            margin-right: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .filterChip {
+            background: #2a3344;
+            border: 1px solid #3e4a60;
+            color: #c8d4e6;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.1s;
+        }
+        .filterChip:hover { background: #34405a; border-color: #5a6a80; color: #fff; }
+        .filterChip.active {
+            background: linear-gradient(135deg, #4a6fa8, #3a5c8a);
+            color: #fff;
+            border-color: #6aa4d8;
+            box-shadow: 0 0 4px rgba(120, 170, 230, 0.3);
+        }
+        #glossarySort {
+            margin-left: auto;
+            background: #2a3344;
+            border: 1px solid #3e4a60;
+            color: #c8d4e6;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        #glossaryBody {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px 20px 20px 20px;
+        }
+        .glossarySection {
+            margin-top: 18px;
+        }
+        .glossarySection:first-child { margin-top: 6px; }
+        .glossarySection h3 {
+            margin: 0 0 10px 0;
+            padding: 6px 10px;
+            background: linear-gradient(to right, rgba(80, 105, 150, 0.25), rgba(80, 105, 150, 0.05));
+            border-left: 3px solid #6a8ac0;
+            color: #c4d8f4;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-radius: 2px;
+        }
+        .glossarySection .sectionCount {
+            color: #8a96a8;
+            font-weight: 400;
+            margin-left: 6px;
+            font-size: 11px;
+            text-transform: none;
+            letter-spacing: 0;
+        }
+        .glossaryGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 6px;
+        }
+        .glossaryCard {
+            background: #2a2f3d;
+            border: 1px solid #3a4252;
+            border-radius: 5px;
+            padding: 7px 10px;
+            cursor: pointer;
+            transition: all 0.1s;
+            overflow: hidden;
+        }
+        .glossaryCard:hover {
+            background: #333a4c;
+            border-color: #5a6a90;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+        .glossaryCard .cardTitle {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e8e8ec;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+        .glossaryCard .cardFormula {
+            font-size: 11px;
+            color: #a8b8d0;
+            font-weight: 400;
+        }
+        .glossaryCard .cardMeta {
+            font-size: 10px;
+            color: #8a96a8;
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Element cards — use a real periodic-table-square layout. */
+        .glossaryCard.elementCard {
+            display: grid;
+            grid-template-columns: 64px 1fr;
+            gap: 10px;
+            padding: 8px 10px;
+            align-items: stretch;
+        }
+        .periodicSquare {
+            background: #1a1f2c;
+            border: 1px solid #4a5a7a;
+            border-radius: 4px;
+            padding: 4px 4px 3px 4px;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: space-between;
+            text-align: center;
+            min-height: 62px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        .periodicSquare .atomicNumber {
+            font-size: 9px;
+            color: #a0b4d8;
+            text-align: left;
+            line-height: 1;
+            font-family: monospace;
+        }
+        .periodicSquare .atomicSymbol {
+            font-size: 20px;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1.1;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+            margin: 1px 0;
+        }
+        .periodicSquare .atomicName {
+            font-size: 8px;
+            color: #b8c4d8;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Category-based tints for the periodic square background */
+        .periodicSquare.cat-alkali-metal         { background: linear-gradient(135deg, #4a2848, #6a3a5a); border-color: #8a5080; }
+        .periodicSquare.cat-alkaline-earth       { background: linear-gradient(135deg, #4a3a1a, #6a5228); border-color: #8a7030; }
+        .periodicSquare.cat-transition-metal     { background: linear-gradient(135deg, #2a3a50, #3a4e6a); border-color: #5a7090; }
+        .periodicSquare.cat-post-transition-metal{ background: linear-gradient(135deg, #2a4040, #3a5858); border-color: #507878; }
+        .periodicSquare.cat-metalloid            { background: linear-gradient(135deg, #3a3a1a, #555028); border-color: #807040; }
+        .periodicSquare.cat-nonmetal             { background: linear-gradient(135deg, #1a3a2a, #285240); border-color: #307858; }
+        .periodicSquare.cat-halogen              { background: linear-gradient(135deg, #3a1a40, #5a2858); border-color: #804080; }
+        .periodicSquare.cat-noble-gas            { background: linear-gradient(135deg, #1a2a50, #2a3e6a); border-color: #4060a0; }
+        .periodicSquare.cat-lanthanide           { background: linear-gradient(135deg, #3a1a3a, #582858); border-color: #803880; }
+        .periodicSquare.cat-actinide             { background: linear-gradient(135deg, #1a2a2a, #284040); border-color: #407070; }
+
+        .elementDetails {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+            overflow: hidden;
+            min-width: 0;
+        }
+        .elementDetails .elementName {
+            font-size: 13px;
+            font-weight: 600;
+            color: #e8e8ec;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .elementDetails .elementCategory {
+            font-size: 10px;
+            color: #8a96a8;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .subatomicPills {
+            display: flex;
+            gap: 3px;
+            margin-top: auto;
+            padding-top: 2px;
+        }
+        .subatomicPill {
+            background: rgba(0, 0, 0, 0.32);
+            border: 1px solid transparent;
+            border-radius: 10px;
+            padding: 1px 7px;
+            font-size: 10px;
+            font-family: monospace;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.1s;
+            white-space: nowrap;
+            color: #ddd;
+        }
+        .subatomicPill:hover {
+            transform: scale(1.08);
+            filter: brightness(1.3);
+            box-shadow: 0 0 4px rgba(255,255,255,0.3);
+        }
+        .subatomicPill.p { color: #ffb0b0; border-color: #a04848; }   /* proton — red */
+        .subatomicPill.n { color: #c8c8c8; border-color: #505050; }    /* neutron — gray */
+        .subatomicPill.e { color: #b8d4ff; border-color: #3a5a90; }   /* electron — blue */
+        .glossaryEmpty {
+            color: #8a96a8;
+            font-size: 13px;
+            font-style: italic;
+            text-align: center;
+            padding: 30px 10px;
+        }
+        #glossaryFooter {
+            padding: 8px 20px;
+            border-top: 1px solid #3a4050;
+            background: #1e2330;
+            font-size: 11px;
+            color: #8a96a8;
+            flex-shrink: 0;
+        }
+
+        /* Modal overlay */
+        #helpModalBackdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            z-index: 100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(3px);
+            -webkit-backdrop-filter: blur(3px);
+        }
+        #helpModalBackdrop.open { display: flex; }
+        #helpModal {
+            width: min(680px, 92vw);
+            max-height: 86vh;
+            background: #2a2e3a;
+            color: #e8e8ec;
+            border: 1px solid #4a5060;
+            border-radius: 8px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        #helpModal header {
+            padding: 14px 20px;
+            background: linear-gradient(to right, #3a4258, #2e3545);
+            border-bottom: 1px solid #4a5060;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #helpModal header h2 {
+            margin: 0;
+            font-size: 18px;
+            font-weight: 600;
+            color: #f3e8c4;
+        }
+        #helpModal header .closeX {
+            background: transparent;
+            border: none;
+            color: #ccc;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 0 4px;
+            line-height: 1;
+            margin: 0;
+        }
+        #helpModal header .closeX:hover { color: #fff; }
+        #helpModal .pageBody {
+            flex: 1;
+            padding: 18px 24px;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-size: 14px;
+        }
+        #helpModal .pageBody h3 {
+            margin: 0 0 12px 0;
+            font-size: 17px;
+            color: #ffd37a;
+            font-weight: 600;
+        }
+        #helpModal .pageBody h4 {
+            margin: 14px 0 6px 0;
+            font-size: 14px;
+            color: #b4d4ff;
+        }
+        #helpModal .pageBody p { margin: 8px 0; }
+        #helpModal .pageBody ul { margin: 8px 0; padding-left: 22px; }
+        #helpModal .pageBody li { margin-bottom: 6px; }
+        #helpModal .pageBody .colorDot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            vertical-align: baseline;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        #helpModal .pageBody .kbd {
+            display: inline-block;
+            background: #1a1e26;
+            border: 1px solid #556;
+            border-radius: 3px;
+            padding: 1px 6px;
+            font-family: monospace;
+            font-size: 12px;
+            color: #bcd;
+            margin: 0 2px;
+        }
+        #helpModal footer {
+            padding: 10px 18px;
+            background: #242834;
+            border-top: 1px solid #4a5060;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #helpModal footer .nav-btn {
+            background: #445060;
+            color: #e8e8ec;
+            border: 1px solid #5a6578;
+            padding: 6px 16px;
+            border-radius: 4px;
+            font-size: 13px;
+            cursor: pointer;
+            margin: 0;
+        }
+        #helpModal footer .nav-btn:hover:not(:disabled) { background: #556878; }
+        #helpModal footer .nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        #helpModal footer .dots {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        #helpModal footer .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #4a5060;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        #helpModal footer .dot:hover { background: #6a7080; }
+        #helpModal footer .dot.active { background: #ffd37a; }
+        #helpModal footer .pageLabel { font-size: 12px; color: #9aa0b0; margin-right: 10px; }
+
+        /* Glossary terms - underlined dotted, clickable */
+        .gloss {
+            border-bottom: 1px dotted #ffcc66;
+            cursor: help;
+            color: #ffe2a8;
+        }
+        .gloss:hover { color: #fff4c8; border-bottom-color: #fff4c8; }
+        #glossPopup {
+            position: fixed;
+            z-index: 110;
+            background: #3a3f4e;
+            color: #f0f0f0;
+            border: 1px solid #ffcc66;
+            border-radius: 6px;
+            padding: 10px 14px;
+            max-width: 320px;
+            font-size: 13px;
+            line-height: 1.5;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+            display: none;
+        }
+        #glossPopup.open { display: block; }
+        #glossPopup .glossTerm {
+            font-weight: 600;
+            color: #ffd37a;
+            display: block;
+            margin-bottom: 4px;
+            font-size: 14px;
+        }
+
+        /* Right-click context / inspector panel */
+        #inspector {
+            position: fixed;
+            z-index: 90;
+            background: rgba(25, 28, 38, 0.96);
+            border: 1px solid #5a6275;
+            border-radius: 6px;
+            padding: 12px 14px;
+            min-width: 220px;
+            max-width: 280px;
+            color: #e8e8ec;
+            font-size: 12px;
+            line-height: 1.5;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.6);
+            display: none;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        #inspector.open { display: block; }
+        #inspector h5 {
+            margin: 0 0 6px 0;
+            padding: 0 0 4px 0;
+            font-size: 14px;
+            color: #ffd37a;
+            border-bottom: 1px solid #445;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #inspector .closeBtn {
+            background: transparent;
+            border: none;
+            color: #aaa;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 0;
+            padding: 0 4px;
+        }
+        #inspector .closeBtn:hover { color: #fff; }
+        #inspector .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            gap: 10px;
+        }
+        #inspector .row .k { color: #9ba6b8; }
+        #inspector .row .v { color: #eaeaea; font-family: monospace; text-align: right; }
+        #inspector .actionBtn {
+            width: 100%;
+            margin: 2px 0;
+            padding: 5px;
+            background: #3a4258;
+            color: #cce;
+            border: 1px solid #556;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        #inspector .actionBtn:hover { background: #4a5268; }
+
+        /* Dragging cursor */
+        canvas.dragging { cursor: grabbing !important; }
+
+        /* Graphs panel */
+        #graphsPanel {
+            position: absolute;
+            top: 10px;
+            right: 200px;
+            width: 280px;
+            background: rgba(40, 44, 56, 0.92);
+            border: 1px solid #55596a;
+            border-radius: 5px;
+            padding: 6px 8px 4px;
+            z-index: 16;
+            display: none;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 10px;
+            color: #ccd;
+        }
+        #graphsPanel.open { display: block; }
+        #graphsPanel h5 {
+            margin: 0 0 4px 0;
+            font-size: 11px;
+            color: #ffd37a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #graphsPanel h5 .closeBtn {
+            background: transparent; border: none; color: #aaa;
+            cursor: pointer; font-size: 14px; margin: 0; padding: 0 3px;
+        }
+        #graphsPanel canvas {
+            display: block;
+            width: 100%;
+            height: 70px;
+            background: rgba(15, 18, 25, 0.8);
+            border-radius: 3px;
+            margin-bottom: 3px;
+        }
+        #graphsPanel .graphLabel {
+            font-size: 9px;
+            color: #9aa0b0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 2px 3px;
+        }
+
+        /* Double-slit demo panel — dedicated wave-mode overlay */
+        #doubleSlitPanel {
+            position: absolute;
+            top: 10px;
+            right: 500px;
+            width: 380px;
+            background: rgba(30, 34, 50, 0.96);
+            border: 1px solid #55596a;
+            border-radius: 5px;
+            padding: 8px 12px;
+            z-index: 18;
+            display: none;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 11px;
+            color: #dde;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+        }
+        #doubleSlitPanel.open { display: block; }
+        #doubleSlitPanel h5 {
+            margin: 0 0 4px 0;
+            font-size: 12px;
+            color: #c8b8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #doubleSlitPanel h5 .closeBtn {
+            background: transparent; border: none; color: #aaa;
+            cursor: pointer; font-size: 16px; margin: 0; padding: 0 3px;
+        }
+        #doubleSlitPanel .caveat {
+            font-size: 10px;
+            color: #a0a0b8;
+            font-style: italic;
+            padding: 4px 6px;
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 3px;
+            border-left: 2px solid #8a70c0;
+            margin-bottom: 6px;
+            line-height: 1.35;
+        }
+        #doubleSlitPanel canvas {
+            display: block;
+            width: 100%;
+            height: 180px;
+            background: #0a0c15;
+            border: 1px solid #2a2d40;
+            border-radius: 3px;
+            margin-bottom: 4px;
+        }
+        #doubleSlitPanel .controls-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin: 3px 0;
+            font-size: 10px;
+        }
+        #doubleSlitPanel .controls-row label {
+            min-width: 68px;
+            color: #bbc;
+        }
+        #doubleSlitPanel .controls-row input[type=range] {
+            flex: 1;
+        }
+        #doubleSlitPanel .controls-row .val {
+            min-width: 42px;
+            color: #ffd37a;
+            font-family: monospace;
+            text-align: right;
+            font-size: 10px;
+        }
+        #doubleSlitPanel .mode-tabs {
+            display: flex;
+            gap: 4px;
+            margin: 6px 0 4px 0;
+        }
+        #doubleSlitPanel .mode-tabs button {
+            flex: 1;
+            padding: 4px 6px;
+            background: #2a2e40;
+            color: #aab;
+            border: 1px solid #3a3e52;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+        }
+        #doubleSlitPanel .mode-tabs button.active {
+            background: linear-gradient(135deg, #4a3a70, #6a4a90);
+            color: #fff;
+            border-color: #8a6ac0;
+        }
+        #doubleSlitPanel .mode-tabs button:hover:not(.active) {
+            background: #32364a;
+        }
+
+        /* Phase indicator in stats bubble */
+        .phaseTag {
+            margin-left: 8px;
+            padding: 1px 6px;
+            border-radius: 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .phase-gas    { background: rgba(90, 150, 200, 0.4); color: #bfe; }
+        .phase-liquid { background: rgba(90, 200, 120, 0.4); color: #cfb; }
+        .phase-solid  { background: rgba(200, 180, 90, 0.5); color: #fed; }
+        .phase-plasma { background: rgba(220, 100, 200, 0.5); color: #fcd; }
+
+        /* Log filters */
+        #logFilters {
+            position: absolute;
+            bottom: 100px;
+            right: 10px;
+            background: rgba(50, 50, 50, 0.85);
+            padding: 4px 8px;
+            border-radius: 3px;
+            z-index: 16;
+            font-size: 10px;
+            color: #ccc;
+            display: flex;
+            gap: 8px;
+        }
+        #logFilters label { font-size: 10px; margin-left: 3px; cursor: pointer; }
+
+        /* Isotope picker input */
+        #isotopeN { width: 40px; }
+
+        /* Small text hint for mobile/touch */
+        #touchHint {
+            display: none;
+            position: absolute;
+            bottom: 110px;
+            left: 10px;
+            background: rgba(30, 40, 60, 0.9);
+            color: #bfe;
+            padding: 4px 8px;
+            border-radius: 3px;
+            font-size: 10px;
+            z-index: 20;
+        }
+        @media (pointer: coarse) { #touchHint { display: block; } }
+
+        /* =====================================================================
+           MOBILE / NARROW-VIEWPORT LAYOUT
+           =====================================================================
+           Everything above this point is the desktop layout and stays untouched
+           on wide screens. On phones and small tablets (≤720 px wide), we:
+             - Collapse the main sidebar into a slide-in drawer
+             - Surface a round hamburger-style toggle button in the corner
+             - Reposition side panels (graphs, glossary, double-slit) so they
+               don't try to sit next to a sidebar that isn't visible
+             - Scale tap targets up to meet the 44-px recommended minimum
+             - Tighten the stats bubble so it doesn't wrap weirdly */
+
+        /* Hamburger button (hidden on desktop) */
+        #mobileToggle {
+            display: none;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(40, 80, 140, 0.92);
+            color: #fff;
+            border: 2px solid #6ac;
+            font-size: 20px;
+            line-height: 42px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 25;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #mobileToggle:active {
+            background: rgba(60, 110, 180, 0.95);
+        }
+
+        /* Drawer close button (hidden on desktop) */
+        #mobileDrawerClose { display: none; }
+
+        /* Backdrop when drawer is open */
+        #mobileBackdrop {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 21;
+        }
+        body.mobile-drawer-open #mobileBackdrop { display: block; }
+
+        @media (max-width: 720px) {
+            /* Show the hamburger */
+            #mobileToggle { display: block; }
+
+            /* Sidebar becomes a slide-out drawer */
+            #controls {
+                top: 0;
+                left: 0;
+                bottom: 0;
+                max-height: 100vh;
+                width: 85vw;
+                max-width: 340px;
+                padding: 58px 12px 16px 12px;  /* top space for close button */
+                border-radius: 0 8px 8px 0;
+                transform: translateX(-100%);
+                transition: transform 0.22s ease-out;
+                z-index: 22;
+                box-shadow: 3px 0 14px rgba(0, 0, 0, 0.5);
+            }
+            body.mobile-drawer-open #controls {
+                transform: translateX(0);
+            }
+
+            /* Larger tap targets inside the sidebar */
+            #controls button,
+            #controls select,
+            #controls input[type="number"],
+            #controls input[type="text"],
+            #controls .section-header {
+                min-height: 36px;
+                font-size: 13px;
+                padding: 6px 10px;
+            }
+            #controls input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                vertical-align: middle;
+            }
+            #controls label {
+                font-size: 13px;
+                line-height: 1.4;
+            }
+            #controls .section-header {
+                font-size: 14px;
+                padding: 8px 6px;
+            }
+
+            /* The close X inside the drawer */
+            #mobileDrawerClose {
+                display: block;
+                position: absolute;
+                top: 8px;
+                right: 10px;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: rgba(80, 40, 40, 0.8);
+                color: #fff;
+                border: none;
+                font-size: 22px;
+                line-height: 38px;
+                text-align: center;
+                cursor: pointer;
+                z-index: 23;
+            }
+
+            /* Reposition secondary panels to center-bottom area on mobile.
+               (These selectors used to name #unknownMoleculesPanel and #log,
+               which do not exist; the real IDs are #unknownPanel and
+               #logBoxHtml, so neither rule ever applied on phones.) */
+            #graphsPanel,
+            #doubleSlitPanel,
+            #unknownPanel {
+                top: auto;
+                right: 10px;
+                left: 10px;
+                bottom: 10px;
+                width: auto;
+                max-width: none;
+                max-height: 55vh;
+                overflow-y: auto;
+                z-index: 19;
+            }
+            #unknownPanel { max-height: 35vh; }
+
+            /* Bottom stack on phones: info bar, then log, then log filters */
+            #info {
+                left: 8px;
+                right: 8px;
+                bottom: 8px;
+                min-width: 0;
+                font-size: 11px;
+            }
+            #logBoxHtml {
+                left: 8px;
+                right: 8px;
+                width: auto;
+                bottom: 66px;
+                height: 62px;
+                font-size: 11px;
+            }
+            #logFilters {
+                font-size: 11px;
+                padding: 4px 6px;
+                bottom: 134px;
+                right: 8px;
+            }
+            #logFilters label,
+            #logFilters input {
+                font-size: 12px;
+            }
+
+            /* Entity list: below the stats bubble and help button, narrower */
+            #entityList {
+                top: 96px;
+                right: 8px;
+                width: 140px;
+                max-height: 32vh;
+                font-size: 10px;
+            }
+
+            /* Stats bubble: tighter font, wraps gracefully */
+            #statsBubble {
+                font-size: 11px;
+                padding: 4px 8px;
+                line-height: 1.5;
+            }
+
+            /* Action bar (top-right buttons): flex-wrap, bigger hits */
+            #actionBar button,
+            #topRightControls button {
+                min-height: 40px;
+                min-width: 40px;
+                font-size: 14px;
+            }
+
+            /* Touch hint: stay but move up so it's not under the log */
+            #touchHint {
+                bottom: 28vh;
+                font-size: 11px;
+            }
+
+            /* Tooltips: suppress on touch (they trigger on tap and get annoying) */
+            [title]:active::after,
+            [title]:hover::after { display: none; }
+
+            /* Glossary modal: full-screen on mobile */
+            #glossaryBackdrop > div,
+            #glossaryModal {
+                width: 96vw !important;
+                max-width: 96vw !important;
+                height: 92vh !important;
+                max-height: 92vh !important;
+                top: 4vh !important;
+                left: 2vw !important;
+                right: 2vw !important;
+            }
+
+            /* Info modal: full-width, pleasant padding */
+            #infoModal,
+            #infoModalBackdrop > div {
+                width: 92vw !important;
+                max-width: 92vw !important;
+            }
+
+            /* Help modal: same */
+            #helpModalBackdrop > div {
+                width: 94vw !important;
+                max-width: 94vw !important;
+            }
+        }
+
+        /* Landscape-phone specific: keep things compact */
+        @media (max-width: 900px) and (max-height: 480px) {
+            #controls { padding-top: 50px; }
+            #logBoxHtml { max-height: 15vh; }
+            #touchHint { display: none; }
+        }
+
+        /* =====================================================================
+           ONBOARDING TOUR
+           =====================================================================
+           A first-run walkthrough. A semi-transparent overlay dims the scene,
+           a "spotlight" ring highlights the current target element, and a
+           tooltip card floats nearby with instructions and Next/Skip buttons.
+           The tour fires automatically on first load (localStorage flag) and
+           can be re-triggered from a Tour button in the sidebar. */
+
+        #tourOverlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 100;
+            pointer-events: none;   /* allow clicks through unless on card */
+        }
+        #tourOverlay.open { display: block; }
+
+        /* Dimmer: full-screen dark gradient. Punches a hole via box-shadow
+           inset on the spotlight ring (cheaper than an SVG mask). */
+        #tourDimmer {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.55);
+            pointer-events: auto;
+        }
+
+        /* Spotlight ring that highlights the target element */
+        #tourSpotlight {
+            position: absolute;
+            border: 2px solid #ffd37a;
+            border-radius: 8px;
+            box-shadow:
+                0 0 0 3px rgba(255, 211, 122, 0.35),
+                0 0 0 9999px rgba(0, 0, 0, 0.55);
+            transition: all 0.22s ease-out;
+            pointer-events: none;
+        }
+
+        /* Tooltip card that explains the current step */
+        #tourCard {
+            position: absolute;
+            background: linear-gradient(135deg, #2a3050, #3a4068);
+            color: #eef;
+            border: 1px solid #6a7088;
+            border-radius: 8px;
+            padding: 14px 16px;
+            max-width: 340px;
+            min-width: 240px;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 13px;
+            line-height: 1.45;
+            box-shadow: 0 6px 22px rgba(0, 0, 0, 0.5);
+            pointer-events: auto;
+            z-index: 101;
+        }
+        #tourCard h3 {
+            margin: 0 0 6px 0;
+            font-size: 15px;
+            color: #ffd37a;
+        }
+        #tourCard .tour-body {
+            margin-bottom: 10px;
+        }
+        #tourCard .tour-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            align-items: center;
+        }
+        #tourCard .tour-step-indicator {
+            flex: 1;
+            font-size: 11px;
+            color: #9aa0b8;
+        }
+        #tourCard button {
+            background: #4a5478;
+            color: #fff;
+            border: 1px solid #5a6488;
+            border-radius: 4px;
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+            min-height: 32px;
+        }
+        #tourCard button:hover { background: #5a6488; }
+        #tourCard button.primary {
+            background: linear-gradient(135deg, #4a6a90, #5a7aa0);
+            border-color: #7a9ac0;
+            font-weight: 600;
+        }
+        #tourCard button.primary:hover { background: linear-gradient(135deg, #5a7aa0, #6a8ab0); }
+        #tourCard button.skip {
+            background: transparent;
+            color: #aab;
+            border: none;
+        }
+        #tourCard button.skip:hover { color: #fff; }
+
+        @media (max-width: 720px) {
+            #tourCard {
+                max-width: 92vw;
+                min-width: 0;
+                left: 4vw !important;
+                right: 4vw !important;
+                font-size: 14px;
+            }
+            #tourCard button {
+                min-height: 40px;
+                padding: 8px 18px;
+                font-size: 14px;
+            }
+        }
+
+        /* =====================================================================
+           POTENTIAL DISCOVERIES PANEL
+           =====================================================================
+           A live-updating panel that flags "interesting" events from the sim:
+           molecules that don't match our knowledge base (unknown), noble-gas
+           compounds and other real-world oddities (notable), or genuinely
+           anomalous combinations (anomaly). Honest framing: the sim is cartoon
+           physics — these flags are pattern-matches against known chemistry,
+           not actual scientific discoveries. */
+
+        #discoveriesPanel {
+            position: absolute;
+            top: 10px;
+            right: 220px;
+            width: 320px;
+            max-height: 70vh;
+            background: linear-gradient(135deg, rgba(30, 34, 46, 0.97), rgba(40, 48, 68, 0.97));
+            border: 1px solid #6a7a90;
+            border-radius: 6px;
+            padding: 8px 10px 6px;
+            z-index: 17;
+            display: none;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 11px;
+            color: #dde;
+            overflow-y: auto;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+        }
+        #discoveriesPanel.open { display: block; }
+        #discoveriesPanel h5 {
+            margin: 0 0 6px 0;
+            font-size: 12px;
+            color: #ffd37a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #discoveriesPanel h5 .closeBtn {
+            background: transparent; border: none; color: #aaa;
+            cursor: pointer; font-size: 16px; padding: 0 3px;
+        }
+        #discoveriesPanel .caveat {
+            font-size: 10px;
+            color: #a0a8b8;
+            font-style: italic;
+            background: rgba(0, 0, 0, 0.25);
+            border-left: 2px solid #7a85a0;
+            border-radius: 3px;
+            padding: 4px 6px;
+            margin-bottom: 6px;
+            line-height: 1.35;
+        }
+        #discoveriesPanel .empty {
+            text-align: center;
+            color: #778;
+            font-style: italic;
+            padding: 14px 8px;
+            font-size: 11px;
+        }
+        #discoveriesPanel .discovery {
+            background: rgba(20, 24, 36, 0.6);
+            border: 1px solid #3a4258;
+            border-left-width: 3px;
+            border-radius: 3px;
+            padding: 6px 8px;
+            margin-bottom: 5px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        #discoveriesPanel .discovery:hover {
+            background: rgba(45, 55, 80, 0.75);
+        }
+        #discoveriesPanel .discovery.tier-unknown     { border-left-color: #6ac0e0; }
+        #discoveriesPanel .discovery.tier-notable     { border-left-color: #e0a860; }
+        #discoveriesPanel .discovery.tier-anomaly     { border-left-color: #e06868; }
+        #discoveriesPanel .discovery .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 2px;
+        }
+        #discoveriesPanel .discovery .formula {
+            font-weight: 600;
+            font-size: 13px;
+            color: #f0e8d0;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+        }
+        #discoveriesPanel .discovery .count {
+            font-size: 10px;
+            color: #8a93a8;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1px 6px;
+            border-radius: 8px;
+        }
+        #discoveriesPanel .discovery .tier-label {
+            display: inline-block;
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            padding: 1px 5px;
+            border-radius: 2px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        #discoveriesPanel .discovery.tier-unknown .tier-label { background: #2a5878; color: #b8e0f0; }
+        #discoveriesPanel .discovery.tier-notable .tier-label { background: #785030; color: #f0d0a0; }
+        #discoveriesPanel .discovery.tier-anomaly .tier-label { background: #782a2a; color: #f0b8b8; }
+        #discoveriesPanel .discovery .note {
+            font-size: 10.5px;
+            color: #bfc3d0;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        #discoveriesPanel .discovery .elements {
+            font-size: 10px;
+            color: #8a93a8;
+            margin-top: 3px;
+        }
+        #discoveriesPanel .filter-row {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 5px;
+            font-size: 10px;
+        }
+        #discoveriesPanel .filter-row button {
+            flex: 1;
+            padding: 3px 4px;
+            background: #2a2e3e;
+            color: #aab;
+            border: 1px solid #3a3e50;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+        #discoveriesPanel .filter-row button.active {
+            background: linear-gradient(135deg, #4a5478, #5a6488);
+            color: #fff;
+            border-color: #6a7498;
+        }
+        #discoveriesPanel .filter-row button:hover:not(.active) { background: #3a3e50; }
+        #discoveriesPanel .clearBtn {
+            width: 100%;
+            padding: 4px;
+            background: #3a2e2e;
+            color: #e0a0a0;
+            border: 1px solid #5a3a3a;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            margin-top: 4px;
+        }
+        #discoveriesPanel .clearBtn:hover { background: #4a3838; }
+
+        /* Mobile: full-width bottom panel */
+        @media (max-width: 720px) {
+            #discoveriesPanel {
+                top: auto;
+                right: 10px;
+                left: 10px;
+                bottom: 10px;
+                width: auto;
+                max-width: none;
+                max-height: 55vh;
+            }
+        }
+
+        /* =====================================================================
+           ACHIEVEMENTS / STUDY GUIDE
+           =====================================================================
+           Toast pop-ups that celebrate learning milestones. Each achievement
+           represents a chemistry/physics concept the user just demonstrated.
+           Progress persists in localStorage. */
+
+        /* Toast — appears bottom-right on unlock, slides up, fades out */
+        #achievementToastStack {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 500;
+            display: flex;
+            flex-direction: column-reverse;
+            gap: 8px;
+            pointer-events: none;
+        }
+        .achievement-toast {
+            background: linear-gradient(135deg, rgba(80, 55, 20, 0.97), rgba(60, 45, 80, 0.97));
+            color: #f5e8c4;
+            border: 1px solid #b8a060;
+            border-radius: 8px;
+            padding: 10px 14px 10px 54px;
+            min-width: 260px;
+            max-width: 340px;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 211, 122, 0.25);
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 12px;
+            position: relative;
+            opacity: 0;
+            transform: translateX(360px);
+            transition: all 0.35s cubic-bezier(0.2, 0.8, 0.3, 1);
+            pointer-events: auto;
+        }
+        .achievement-toast.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .achievement-toast .icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 28px;
+            line-height: 1;
+            filter: drop-shadow(0 0 4px rgba(255, 211, 122, 0.6));
+        }
+        .achievement-toast .title-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: #ffd37a;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 2px;
+        }
+        .achievement-toast .name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            line-height: 1.25;
+            margin-bottom: 3px;
+        }
+        .achievement-toast .desc {
+            font-size: 11px;
+            color: #ddd;
+            line-height: 1.35;
+        }
+
+        /* Achievements panel — full list, shows locked + unlocked */
+        #achievementsPanel {
+            position: absolute;
+            top: 10px;
+            right: 220px;
+            width: 360px;
+            max-height: 75vh;
+            background: linear-gradient(135deg, rgba(30, 30, 45, 0.97), rgba(45, 40, 65, 0.97));
+            border: 1px solid #6a6a88;
+            border-radius: 6px;
+            padding: 10px 12px;
+            z-index: 17;
+            display: none;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 12px;
+            color: #ddd;
+            overflow-y: auto;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+        }
+        #achievementsPanel.open { display: block; }
+        #achievementsPanel h5 {
+            margin: 0 0 6px 0;
+            font-size: 13px;
+            color: #ffd37a;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #achievementsPanel h5 .closeBtn {
+            background: transparent; border: none; color: #aaa;
+            cursor: pointer; font-size: 16px; padding: 0 3px;
+        }
+        #achievementsPanel .progress-bar-wrap {
+            background: rgba(0, 0, 0, 0.3);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        #achievementsPanel .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(to right, #c89040, #ffd37a, #c89040);
+            transition: width 0.4s ease-out;
+        }
+        #achievementsPanel .progress-label {
+            font-size: 10px;
+            color: #bbb;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        #achievementsPanel .ach-category {
+            margin-top: 12px;
+            padding-top: 8px;
+            border-top: 1px solid #3a3a50;
+        }
+        #achievementsPanel .ach-category:first-of-type {
+            margin-top: 2px;
+            padding-top: 0;
+            border-top: none;
+        }
+        #achievementsPanel .category-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #c8c0e0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+        #achievementsPanel .ach-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 5px 6px;
+            border-radius: 4px;
+            margin-bottom: 3px;
+            background: rgba(0, 0, 0, 0.2);
+            transition: background 0.15s;
+        }
+        #achievementsPanel .ach-row.unlocked {
+            background: linear-gradient(to right, rgba(80, 55, 20, 0.5), rgba(60, 45, 80, 0.3));
+            border-left: 2px solid #ffd37a;
+            padding-left: 4px;
+        }
+        #achievementsPanel .ach-row .ach-icon {
+            font-size: 22px;
+            line-height: 1;
+            flex-shrink: 0;
+            opacity: 0.35;
+            filter: grayscale(1);
+            margin-top: 2px;
+        }
+        #achievementsPanel .ach-row.unlocked .ach-icon {
+            opacity: 1;
+            filter: none;
+        }
+        #achievementsPanel .ach-row .ach-name {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ccc;
+            line-height: 1.3;
+        }
+        #achievementsPanel .ach-row.unlocked .ach-name {
+            color: #fff;
+        }
+        #achievementsPanel .ach-row .ach-desc {
+            font-size: 10.5px;
+            color: #999;
+            line-height: 1.35;
+            margin-top: 1px;
+        }
+        #achievementsPanel .ach-row.unlocked .ach-desc {
+            color: #ddd;
+        }
+        #achievementsPanel .ach-row .ach-hint {
+            font-size: 10px;
+            color: #8a95a0;
+            font-style: italic;
+            line-height: 1.35;
+            margin-top: 2px;
+        }
+        #achievementsPanel .reset-btn {
+            width: 100%;
+            padding: 6px;
+            background: #3a2e2e;
+            color: #e0a0a0;
+            border: 1px solid #5a3a3a;
+            border-radius: 3px;
+            font-size: 11px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        #achievementsPanel .reset-btn:hover { background: #4a3838; }
+
+        /* Mobile: full-width bottom panel, bigger touch targets */
+        @media (max-width: 720px) {
+            #achievementsPanel {
+                top: auto;
+                right: 10px;
+                left: 10px;
+                bottom: 10px;
+                width: auto;
+                max-width: none;
+                max-height: 60vh;
+            }
+            #achievementToastStack {
+                bottom: 10px;
+                right: 10px;
+                left: 10px;
+            }
+            .achievement-toast {
+                min-width: 0;
+                max-width: none;
+                width: calc(100vw - 20px);
+                box-sizing: border-box; /* padding was pushing toasts 68px past the right edge */
+            }
+        }
+
+        /* Desktop: the top-right panels start below the centered stats bubble,
+           which covered their titles on screens narrower than about 1480px. */
+        @media (min-width: 721px) {
+            #graphsPanel, #unknownPanel, #doubleSlitPanel, #discoveriesPanel, #achievementsPanel { top: 42px; }
+        }
+
+        /* =====================================================================
+           FEATURE BUTTONS — HIGH-LEVEL "THINGS TO DO"
+           =====================================================================
+           A unified look for the top-of-sidebar button stack: Tour, Study Journal,
+           Lessons, Graphs, Double-Slit, Discoveries, Glossary. Each button gets
+           its own accent color (via a per-button gradient) while sharing the
+           same shape, padding, and hover behavior. */
+
+        .feature-btn {
+            display: block;
+            width: 100%;
+            margin: 0 0 6px 0;
+            padding: 8px 10px;
+            color: #fff !important;
+            font-weight: 600;
+            font-size: 12.5px;
+            text-align: left;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.1s, filter 0.15s;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        }
+        .feature-btn:hover {
+            filter: brightness(1.15);
+            transform: translateX(2px);
+        }
+        .feature-btn:active { transform: translateX(0); filter: brightness(0.95); }
+        /* Per-button accent gradients */
+        .feature-btn.f-tour        { background: linear-gradient(135deg, #3a5080, #4a6090); }
+        .feature-btn.f-journal     { background: linear-gradient(135deg, #805020, #a06830); }
+        .feature-btn.f-lessons     { background: linear-gradient(135deg, #5a3a80, #7a5ab0); }
+        .feature-btn.f-graphs      { background: linear-gradient(135deg, #2a6050, #3a7065); }
+        .feature-btn.f-doubleslit  { background: linear-gradient(135deg, #4a3a70, #6a4a90); }
+        .feature-btn.f-discoveries { background: linear-gradient(135deg, #305870, #40708a); }
+        .feature-btn.f-glossary    { background: linear-gradient(135deg, #304868, #456fa8); }
+
+        /* Divider below the feature-button stack */
+        .feature-stack-divider {
+            border: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            margin: 4px 0 10px 0;
+        }
+        html[data-theme="light"] .feature-stack-divider {
+            border-top-color: rgba(0, 0, 0, 0.15);
+        }
+
+        /* Save/Load scene buttons — paired side-by-side above Clear All */
+        .scene-io-row {
+            display: flex;
+            gap: 4px;
+            margin: 0 0 4px 0;
+        }
+        .scene-io-btn {
+            flex: 1;
+            margin: 0;
+            padding: 6px 8px;
+            font-size: 11.5px;
+            background: linear-gradient(135deg, #3a5a50, #4a6a60);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .scene-io-btn:hover {
+            filter: brightness(1.15);
+        }
+        html[data-theme="light"] .scene-io-btn {
+            background: linear-gradient(135deg, #4a7a70, #5a8a80);
+            border-color: rgba(0, 0, 0, 0.2);
+        }
+        /* Light theme: same gradients work, just slightly darker text contrast */
+        html[data-theme="light"] .feature-btn {
+            border-color: rgba(0, 0, 0, 0.2);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* =====================================================================
+           GUIDED LESSONS PANEL
+           =====================================================================
+           A side panel that walks users through scripted physics/chemistry
+           topics. Unlike the tour (which points at UI), lessons point at
+           PHYSICS — build scenes, explain what's happening, advance when
+           the concept has been demonstrated. */
+
+        #lessonsListPanel,
+        #lessonPanel {
+            position: absolute;
+            top: 10px;
+            right: 220px;
+            width: 360px;
+            max-height: 76vh;
+            background: linear-gradient(135deg, rgba(25, 30, 50, 0.97), rgba(40, 35, 65, 0.97));
+            border: 1px solid #6a6a90;
+            border-radius: 7px;
+            padding: 10px 12px;
+            z-index: 17;
+            display: none;
+            font-family: 'Segoe UI', sans-serif;
+            font-size: 12px;
+            color: #dde;
+            overflow-y: auto;
+            box-shadow: 0 4px 18px rgba(0, 0, 0, 0.5);
+        }
+        #lessonsListPanel.open,
+        #lessonPanel.open { display: block; }
+        #lessonsListPanel h4,
+        #lessonPanel h4 {
+            margin: 0 0 6px 0;
+            font-size: 13px;
+            color: #c8b8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #lessonsListPanel h4 .closeBtn,
+        #lessonPanel h4 .closeBtn {
+            background: transparent; border: none; color: #aaa;
+            cursor: pointer; font-size: 16px; padding: 0 3px;
+        }
+        #lessonsListPanel .intro {
+            font-size: 11px;
+            color: #a8b0c0;
+            line-height: 1.4;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        #lessonsListPanel .lesson-btn {
+            display: block;
+            width: 100%;
+            text-align: left;
+            background: rgba(30, 35, 55, 0.8);
+            color: #dde;
+            border: 1px solid #4a4e70;
+            border-left: 3px solid #7a6acf;
+            border-radius: 3px;
+            padding: 8px 10px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.12s;
+        }
+        #lessonsListPanel .lesson-btn:hover {
+            background: rgba(55, 45, 90, 0.85);
+            border-left-color: #a898e0;
+            transform: translateX(2px);
+        }
+        #lessonsListPanel .lesson-btn .lesson-title {
+            font-weight: 600;
+            color: #f0e8d0;
+            margin-bottom: 2px;
+        }
+        #lessonsListPanel .lesson-btn .lesson-summary {
+            font-size: 10.5px;
+            color: #a8b0c0;
+            line-height: 1.4;
+        }
+        #lessonsListPanel .lesson-btn .lesson-difficulty {
+            display: inline-block;
+            font-size: 9px;
+            padding: 1px 5px;
+            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 4px;
+            vertical-align: middle;
+        }
+        .lesson-difficulty-intro    { background: #2a5030; color: #b8e8c0; }
+        .lesson-difficulty-medium   { background: #4a4020; color: #e8d880; }
+        .lesson-difficulty-advanced { background: #5a2a30; color: #f0b8b8; }
+
+        /* In-progress lesson panel — step display */
+        #lessonPanel .lesson-progress-bar {
+            background: rgba(0, 0, 0, 0.3);
+            height: 4px;
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 4px 0 10px 0;
+        }
+        #lessonPanel .lesson-progress-fill {
+            height: 100%;
+            background: linear-gradient(to right, #7a6acf, #a898e0);
+            transition: width 0.3s;
+        }
+        #lessonPanel .lesson-step-num {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            color: #a898e0;
+            margin-bottom: 4px;
+        }
+        #lessonPanel .lesson-step-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f0e8d0;
+            margin-bottom: 8px;
+            line-height: 1.3;
+        }
+        #lessonPanel .lesson-step-body {
+            font-size: 12.5px;
+            line-height: 1.55;
+            color: #dde;
+        }
+        #lessonPanel .lesson-step-body p { margin: 0 0 8px 0; }
+        #lessonPanel .lesson-step-body ul { margin: 4px 0 10px 0; padding-left: 18px; }
+        #lessonPanel .lesson-step-body li { margin-bottom: 3px; }
+        #lessonPanel .lesson-step-body strong { color: #ffd37a; }
+        #lessonPanel .lesson-step-body em { color: #c8b8f0; font-style: normal; }
+        #lessonPanel .lesson-step-body code {
+            background: rgba(0, 0, 0, 0.35);
+            padding: 1px 4px;
+            border-radius: 2px;
+            font-family: 'Cascadia Code', 'Consolas', monospace;
+            font-size: 11px;
+            color: #ffd37a;
+        }
+        #lessonPanel .lesson-waiting {
+            font-size: 11px;
+            font-style: italic;
+            color: #a898e0;
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 2px solid #7a6acf;
+            padding: 5px 8px;
+            margin-top: 8px;
+            border-radius: 3px;
+        }
+        #lessonPanel .lesson-waiting.met {
+            color: #98e0a8;
+            border-left-color: #4a8a55;
+        }
+        #lessonPanel .lesson-nav {
+            display: flex;
+            gap: 5px;
+            margin-top: 14px;
+            padding-top: 10px;
+            border-top: 1px solid #3a3e58;
+        }
+        #lessonPanel .lesson-nav button {
+            flex: 1;
+            padding: 6px 10px;
+            background: #3a3e58;
+            color: #dde;
+            border: 1px solid #4a4e70;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11.5px;
+        }
+        #lessonPanel .lesson-nav button:hover:not(:disabled) {
+            background: #4a4e70;
+        }
+        #lessonPanel .lesson-nav button:disabled {
+            opacity: 0.4;
+            cursor: default;
+        }
+        #lessonPanel .lesson-nav button.primary {
+            background: linear-gradient(135deg, #6a5acf, #8a7ae0);
+            color: #fff;
+            border-color: #a898e0;
+            font-weight: 600;
+        }
+        #lessonPanel .lesson-nav button.primary:hover {
+            background: linear-gradient(135deg, #7a6adf, #9a8af0);
+        }
+        #lessonPanel .lesson-nav button.exit {
+            background: transparent;
+            color: #aaa;
+            border: none;
+            flex: 0 0 auto;
+        }
+        #lessonPanel .lesson-nav button.exit:hover { color: #fff; }
+
+        /* Mobile: full-width bottom panel */
+        @media (max-width: 720px) {
+            #lessonsListPanel,
+            #lessonPanel {
+                top: auto;
+                right: 10px;
+                left: 10px;
+                bottom: 10px;
+                width: auto;
+                max-width: none;
+                max-height: 60vh;
+            }
+            #lessonPanel .lesson-nav button {
+                font-size: 13px;
+                padding: 10px 12px;
+                min-height: 42px;
+            }
+        }
+
+        /* Light theme overrides */
+        html[data-theme="light"] #lessonsListPanel,
+        html[data-theme="light"] #lessonPanel {
+            background: linear-gradient(135deg, #f2f4f9, #e4e8f0) !important;
+            border-color: #9ba3b5 !important;
+            color: #1a1e2e !important;
+        }
+        html[data-theme="light"] #lessonsListPanel h4,
+        html[data-theme="light"] #lessonPanel h4 {
+            color: #4a3a70 !important;
+        }
+        html[data-theme="light"] #lessonsListPanel .lesson-btn {
+            background: rgba(230, 232, 240, 0.9) !important;
+            color: #2a3040 !important;
+            border-color: #b8c0ce !important;
+            border-left-color: #7a6acf !important;
+        }
+        html[data-theme="light"] #lessonsListPanel .lesson-btn .lesson-title { color: #2a2812 !important; }
+        html[data-theme="light"] #lessonsListPanel .lesson-btn .lesson-summary { color: #5a6078 !important; }
+        html[data-theme="light"] #lessonPanel .lesson-step-title { color: #2a2812 !important; }
+        html[data-theme="light"] #lessonPanel .lesson-step-body { color: #2a3040 !important; }
+        html[data-theme="light"] #lessonPanel .lesson-step-body strong { color: #a06820 !important; }
+        html[data-theme="light"] #lessonPanel .lesson-step-body em { color: #4a3a70 !important; }
+        html[data-theme="light"] #lessonPanel .lesson-step-body code {
+            background: rgba(0, 0, 0, 0.08) !important;
+            color: #804a20 !important;
+        }
+        /* =====================================================================
+           LIGHT THEME — BROAD PANEL OVERRIDES
+           =====================================================================
+           Rather than rewriting every panel's CSS rule, we override the key
+           surfaces in bulk when data-theme="light" is set. The 3D canvas
+           itself stays dark (atoms are color-calibrated for a black field);
+           light mode gives you a light-colored SURROUND — ideal for daytime
+           use, classroom projectors, or textbook screenshots. */
+
+        html[data-theme="light"] body {
+            background-color: #f0f2f7;
+            color: var(--text-primary);
+        }
+
+        /* Secondary panels */
+        html[data-theme="light"] #graphsPanel,
+        html[data-theme="light"] #doubleSlitPanel,
+        html[data-theme="light"] #discoveriesPanel,
+        html[data-theme="light"] #achievementsPanel,
+        html[data-theme="light"] #unknownPanel,
+        html[data-theme="light"] #glossaryModal,
+        html[data-theme="light"] #helpModal,
+        html[data-theme="light"] #infoModal {
+            background: linear-gradient(135deg, #f2f4f9, #e4e8f0) !important;
+            color: #1a1e2e !important;
+            border-color: #9ba3b5 !important;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15) !important;
+        }
+        html[data-theme="light"] #graphsPanel h5,
+        html[data-theme="light"] #doubleSlitPanel h5,
+        html[data-theme="light"] #discoveriesPanel h5,
+        html[data-theme="light"] #achievementsPanel h5,
+        html[data-theme="light"] #unknownPanel header h4 {
+            color: #a06820 !important;
+        }
+        /* Caveats / hints */
+        html[data-theme="light"] #doubleSlitPanel .caveat,
+        html[data-theme="light"] #discoveriesPanel .caveat,
+        html[data-theme="light"] #unknownPanel .hint {
+            background: rgba(0, 0, 0, 0.05) !important;
+            color: #4a5070 !important;
+            border-left-color: #8a90a8 !important;
+        }
+        /* Graph canvases stay dark in light mode, like the double-slit canvas:
+           every graph stroke, fill and caption is drawn in light colors that
+           disappear on a light background. */
+        html[data-theme="light"] #graphsPanel canvas {
+            background: rgba(15, 18, 25, 0.92) !important;
+        }
+        html[data-theme="light"] #graphsPanel .graphLabel { color: #4a5068 !important; }
+        html[data-theme="light"] #graphsPanel .graphLabel.mbLabel { color: #7a5200 !important; }
+        html[data-theme="light"] #doubleSlitPanel canvas {
+            background: #1a1a28 !important;
+        }
+
+        /* Discovery rows */
+        html[data-theme="light"] #discoveriesPanel .discovery {
+            background: rgba(230, 234, 244, 0.8) !important;
+            border-color: #c0c5d0 !important;
+        }
+        html[data-theme="light"] #discoveriesPanel .discovery .formula { color: #2a2812 !important; }
+        html[data-theme="light"] #discoveriesPanel .discovery .note { color: #3a4058 !important; }
+        html[data-theme="light"] #discoveriesPanel .discovery .elements { color: #6a7080 !important; }
+
+        /* Study journal rows */
+        html[data-theme="light"] #achievementsPanel .ach-row {
+            background: rgba(230, 234, 244, 0.6) !important;
+        }
+        html[data-theme="light"] #achievementsPanel .ach-row.unlocked {
+            background: linear-gradient(to right, rgba(210, 180, 130, 0.35), rgba(180, 150, 200, 0.2)) !important;
+        }
+        html[data-theme="light"] #achievementsPanel .ach-row .ach-name { color: #3a4058 !important; }
+        html[data-theme="light"] #achievementsPanel .ach-row.unlocked .ach-name { color: #2a2812 !important; }
+        html[data-theme="light"] #achievementsPanel .ach-row .ach-desc { color: #5a6078 !important; }
+        html[data-theme="light"] #achievementsPanel .ach-row.unlocked .ach-desc { color: #3a4058 !important; }
+        html[data-theme="light"] #achievementsPanel .ach-row .ach-hint { color: #7a8090 !important; }
+        html[data-theme="light"] #achievementsPanel .category-title { color: #4a5078 !important; }
+
+        /* Modals */
+        html[data-theme="light"] #helpModal header,
+        html[data-theme="light"] #infoModal header,
+        html[data-theme="light"] #glossaryModal header {
+            background: linear-gradient(to right, #e8ecf2, #dce2ec) !important;
+            border-bottom-color: #b8c0ce !important;
+        }
+        html[data-theme="light"] #helpModal header h2,
+        html[data-theme="light"] #infoModal header h2,
+        html[data-theme="light"] #glossaryModal header h2 {
+            color: #2a2812 !important;
+        }
+        html[data-theme="light"] .closeX {
+            color: #4a5070 !important;
+        }
+        html[data-theme="light"] .closeX:hover {
+            color: #000 !important;
+        }
+
+        /* Stats bubble */
+        html[data-theme="light"] #statsBubble {
+            background: rgba(245, 248, 252, 0.95) !important;
+            color: #1a1e2e !important;
+            border: 1px solid #b8c0ce !important;
+        }
+        /* The dark-theme accents (#8f8, #fd6, #ad9...) measure 1.0-1.3:1 on this
+           background. These pass WCAG AA (4.6-6.0:1). */
+        html[data-theme="light"] #statsBubble .good { color: #1f7a1f !important; }
+        html[data-theme="light"] #statsBubble .warn { color: #8a5a00 !important; }
+        html[data-theme="light"] #statsBubble .bad  { color: #b3261e !important; }
+        html[data-theme="light"] #statsBubble .simTime { color: #3d6b1f !important; }
+        html[data-theme="light"] #statsBubble .phaseTag.phase-solid  { color: #1d4f7a !important; }
+        html[data-theme="light"] #statsBubble .phaseTag.phase-liquid { color: #1f5c7a !important; }
+        html[data-theme="light"] #statsBubble .phaseTag.phase-gas    { color: #6b5500 !important; }
+        html[data-theme="light"] #statsBubble .phaseTag.phase-plasma { color: #8a1f4f !important; }
+
+        /* Entity list category */
+        html[data-theme="light"] #entityList .category {
+            color: #5a6078 !important;
+        }
+
+        /* Section bodies */
+        html[data-theme="light"] .section-body {
+            color: #2a3040;
+        }
+
+        /* Unknown panel rows */
+        html[data-theme="light"] #unknownPanel ul li {
+            background: rgba(230, 234, 244, 0.7) !important;
+            color: #2a3040 !important;
+        }
+
+        /* Log box entries — subtle tint per event type */
+        html[data-theme="light"] #logBoxHtml .log-entry { color: #2a3040 !important; }
+        html[data-theme="light"] #logBoxHtml .log-bond  { color: #2a5070 !important; }
+        html[data-theme="light"] #logBoxHtml .log-decay { color: #904a20 !important; }
+        html[data-theme="light"] #logBoxHtml .log-binding { color: #6a5020 !important; }
+
+        /* Tour overlay */
+        html[data-theme="light"] #tourDimmer {
+            background: rgba(20, 25, 40, 0.45) !important;
+        }
+        html[data-theme="light"] #tourCard {
+            background: linear-gradient(135deg, #f5f8fc, #e4e8f0) !important;
+            color: #1a1e2e !important;
+            border: 1px solid #9ba3b5 !important;
+        }
+        html[data-theme="light"] #tourCard h3 { color: #a06820 !important; }
+        html[data-theme="light"] #tourCard button {
+            background: #dde3ec !important;
+            color: #1a1e2e !important;
+            border: 1px solid #a8b0c0 !important;
+        }
+        html[data-theme="light"] #tourCard button.primary {
+            background: linear-gradient(135deg, #5a7aa0, #4a6a90) !important;
+            color: #fff !important;
+            border-color: #4a6a90 !important;
+        }
+
+        /* Toast — subtle adjustment so it's readable on light backgrounds */
+        html[data-theme="light"] .achievement-toast {
+            background: linear-gradient(135deg, #f8ecd0, #e8dcf0) !important;
+            color: #2a2812 !important;
+            border-color: #c0a050 !important;
+        }
+        html[data-theme="light"] .achievement-toast .title-row { color: #a06820 !important; }
+        html[data-theme="light"] .achievement-toast .name { color: #1a1e2e !important; }
+        html[data-theme="light"] .achievement-toast .desc { color: #3a4058 !important; }
+
+        /* Log filters and touch hint */
+        html[data-theme="light"] #logFilters {
+            background: rgba(245, 248, 252, 0.9) !important;
+            color: #2a3040 !important;
+            border: 1px solid #b8c0ce !important;
+        }
+        html[data-theme="light"] #touchHint {
+            background: rgba(240, 246, 252, 0.95) !important;
+            color: #2a5070 !important;
+        }
+
+        /* Mobile drawer accents */
+        html[data-theme="light"] #mobileToggle {
+            background: rgba(220, 230, 245, 0.95) !important;
+            color: #2a3050 !important;
+            border-color: #6a80a8 !important;
+        }
+        html[data-theme="light"] #mobileDrawerClose {
+            background: rgba(200, 100, 100, 0.85) !important;
+            color: #fff !important;
+        }
