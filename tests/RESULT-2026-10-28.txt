@@ -1,0 +1,65 @@
+quantum3d5 test run, 2026-10-28T02:05:21Z
+tree: 5bb0cff plus the js/quantum3d5.js header change and its rebuild
+host: Linux 6.18.44-fc-v180, Python 3.13.17, Node v22.22.0, Playwright 1.63.0 (Chromium build 1243, headless)
+dist/quantum3d5.html sha256 8c116260779556c63a74308b6c2f985738936c1a553c82caf3433fe0406fef1f
+
+$ npm test
+model/FUNCTIONS.md is current
+dist/quantum3d5.html is current
+  PASS  S1 load  (canvas=6 script errors=0 [])
+  PASS  S2 offline  (network requests refused: 0 [])
+  PASS  S3 fill  (particles=175 frames 53->54)
+  PASS  S4 pause  (held while paused=True, step moved=True)
+  PASS  S5 scene  (written 175, read back 175, same=True)
+  PASS  S6 theme  (before the app script: light; after: light)
+  PASS  S7 clear  (particles after Clear All=0)
+  PASS  S8 system  (data-theme=light switch ticked=True)
+smoke: 8/8 pass
+  PASS  S1 load  (canvas=6 script errors=0 [])
+  PASS  S2 offline  (network requests refused: 0 [])
+  PASS  S3 fill  (particles=196 frames 54->55)
+  PASS  S4 pause  (held while paused=True, step moved=True)
+  PASS  S5 scene  (written 196, read back 196, same=True)
+  PASS  S6 theme  (before the app script: light; after: light)
+  PASS  S7 clear  (particles after Clear All=0)
+  PASS  S8 system  (data-theme=light switch ticked=True)
+smoke: 8/8 pass
+  PASS  A1 axe  (0 violation(s) [])
+  PASS  A2 contrast  (0 text style(s) under AA [])
+  PASS  A3 canvas names  (0 unnamed [])
+  PASS  A4 control labels  (0 unlabelled [])
+  PASS  A5 keyboard focus  (0 focus stop(s) without a visible ring [])
+accessibility: 5/5 pass
+  PASS  F1 crystalSalt.json
+  PASS  F1 fusionSoup.json
+  PASS  F1 hydrogenCloud.json
+  PASS  F1 plasma.json
+  PASS  F1 saltFormation.json
+  PASS  F1 waterCluster.json
+  PASS  F2+F3 through the page
+scene_format: all pass
+exit 0
+
+$ npm run prove-red
+  caught  S1 load planted in js/quantum3d5.js  (canvas=6 script errors=1 ['undefinedThing is not defined'])
+  caught  S2 offline planted in index.html  (network requests refused: 3 ['example.org'])
+  caught  S3 fill planted in index.html  (Page.click: Timeout 30000ms exceeded.)
+  caught  S4 pause planted in js/quantum3d5.js  (held while paused=True, step moved=False)
+  caught  S5 scene planted in js/quantum3d5.js  (written 233, read back 232, same=False)
+  caught  S7 clear planted in index.html  (Page.click: Timeout 30000ms exceeded.)
+  caught  S8 system planted in index.html  (data-theme=None switch ticked=False)
+  caught  S6 theme planted in index.html  (before the app script: None; after: light)
+smoke --prove-red: 8 of 8 planted faults caught
+  caught  A1 axe planted in index.html
+  caught  A2 contrast planted in css/accessibility.css
+  caught  A3 canvas names planted in index.html
+  caught  A5 keyboard focus planted in css/accessibility.css
+  caught  A4 control labels planted in index.html
+accessibility --prove-red: 5 of 5 planted faults caught
+  caught  an unknown particle type  (particle 0: unknown type 'z')
+  caught  a bond to a particle that is not there  (bond 24: indexes must name two particles, the lower first)
+  caught  a position that is not a number  (particle 0: position and velocity must be finite numbers)
+  caught  the wrong version  (version must be 1, got 2)
+  caught  an empty nucleus  (nucleus 36: must be a non-empty list of particle indexes)
+scene_format --prove-red: 5 of 5 planted faults caught
+exit 0
