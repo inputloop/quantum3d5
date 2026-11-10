@@ -2387,3 +2387,24 @@
             background: rgba(200, 100, 100, 0.85) !important;
             color: #fff !important;
         }
+
+        /* =====================================================================
+           THE LEGEND
+           =====================================================================
+           The title block at the foot of the controls: field names small,
+           capitals and tracked; values in the lettering of technical drawings
+           where the reader has it (osifont), else a narrow sans. No web fonts
+           are fetched. The same shape as the legend on corwin.cloud. */
+        .legend { margin-top: 10px; border-top: 1px solid var(--surface-border); padding-top: 4px; color: var(--text-secondary); font: 11px/16px "osifont", "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif; }
+        .legend .lg-h { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; padding: 0; border: 0; }
+        .legend .lg-line { display: flex; flex-wrap: wrap; margin: 0; }
+        .legend .lg-c { white-space: nowrap; padding: 0 0.5em; border-left: 1px solid var(--surface-border); }
+        .legend .lg-k { font: 400 9px/16px "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.12em; margin-right: 0.3em; }
+        .legend abbr { text-decoration: none; cursor: help; }
+        .legend a { color: var(--text-accent); }
+        .legend .lg-more summary { cursor: pointer; color: var(--text-accent); text-decoration: underline; padding: 2px 0.5em; }
+        .legend .lg-grid { display: grid; grid-template-columns: 1fr; gap: 1px; margin: 2px 0 0; background: var(--surface-border); }
+        .legend .lg-cell { background: var(--panel-solid); padding: 2px 0.5em 4px; }
+        .legend .lg-cell dt { font: 400 9px/16px "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.12em; }
+        .legend .lg-cell dd { margin: 0; overflow-wrap: anywhere; }
+        .legend .lg-copy { margin: 4px 0 0; padding: 0 0.5em; }

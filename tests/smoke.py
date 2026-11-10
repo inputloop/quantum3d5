@@ -17,7 +17,7 @@ usage:  python3 tests/smoke.py [PAGE]          PAGE defaults to ../index.html
 Needs Python 3 and Playwright with Chromium (pip install playwright; playwright install chromium).
 Written in Python on purpose: a second language reading a JavaScript app.
 
-Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
 SPDX-License-Identifier: GPL-3.0-or-later
 """
 import os, shutil, sys, tempfile

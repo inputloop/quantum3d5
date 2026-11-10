@@ -2407,6 +2407,28 @@
             background: rgba(200, 100, 100, 0.85) !important;
             color: #fff !important;
         }
+
+        /* =====================================================================
+           THE LEGEND
+           =====================================================================
+           The title block at the foot of the controls: field names small,
+           capitals and tracked; values in the lettering of technical drawings
+           where the reader has it (osifont), else a narrow sans. No web fonts
+           are fetched. The same shape as the legend on corwin.cloud. */
+        .legend { margin-top: 10px; border-top: 1px solid var(--surface-border); padding-top: 4px; color: var(--text-secondary); font: 11px/16px "osifont", "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif; }
+        .legend .lg-h { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; margin: 0; padding: 0; border: 0; }
+        .legend .lg-line { display: flex; flex-wrap: wrap; margin: 0; }
+        .legend .lg-c { white-space: nowrap; padding: 0 0.5em; border-left: 1px solid var(--surface-border); }
+        .legend .lg-k { font: 400 9px/16px "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.12em; margin-right: 0.3em; }
+        .legend abbr { text-decoration: none; cursor: help; }
+        .legend a { color: var(--text-accent); }
+        .legend .lg-more summary { cursor: pointer; color: var(--text-accent); text-decoration: underline; padding: 2px 0.5em; }
+        .legend .lg-grid { display: grid; grid-template-columns: 1fr; gap: 1px; margin: 2px 0 0; background: var(--surface-border); }
+        .legend .lg-cell { background: var(--panel-solid); padding: 2px 0.5em 4px; }
+        .legend .lg-cell dt { font: 400 9px/16px "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif; text-transform: uppercase; letter-spacing: 0.12em; }
+        .legend .lg-cell dd { margin: 0; overflow-wrap: anywhere; }
+        .legend .lg-copy { margin: 4px 0 0; padding: 0 0.5em; }
+
 </style>
     <style>/* css/accessibility.css */
 /* accessibility.css -- the contrast, focus and motion layer, loaded after quantum3d5.css.
@@ -2415,7 +2437,7 @@
  * text must reach WCAG 2.1 AA contrast, 4.5:1 (3:1 for large text), against every colour stop of
  * the background it sits on, in both themes. tests/accessibility.py measures it again on every run.
  *
- * Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+ * Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
@@ -2747,6 +2769,32 @@ main#stage { display: contents; }
         <!-- Hidden file input that Load Scene triggers -->
         <input type="file" id="loadSceneFileInput" accept=".json,.quantum,application/json" style="display:none">
         <button id="clear">Clear All</button>
+
+        <!-- The legend: a title block, as the drawings on corwin.cloud carry one. Who made this, under
+             what terms, and whom to write to. It is plain HTML and works with scripts off. -->
+        <aside class="legend" id="legend" aria-labelledby="legend-h">
+            <h2 id="legend-h" class="lg-h">Legend</h2>
+            <p class="lg-line">
+                <span class="lg-c"><span class="lg-k">app</span> <span class="lg-v">Quantum 3D5</span></span>
+                <span class="lg-c"><span class="lg-k">by</span> <span class="lg-v"><a href="https://github.com/takushieternal">Bryant Frankford</a></span></span>
+                <span class="lg-c"><span class="lg-k">licence</span> <span class="lg-v"><abbr title="GNU General Public License, version 3 or any later version">GPLv3+</abbr></span></span>
+                <span class="lg-c"><span class="lg-k">prose</span> <span class="lg-v"><abbr title="Creative Commons Attribution-ShareAlike 4.0 International">CC BY-SA 4.0</abbr></span></span>
+                <span class="lg-c"><span class="lg-k">source</span> <span class="lg-v"><a href="https://github.com/inputloop/quantum3d5">quantum3d5</a></span></span>
+                <span class="lg-c"><span class="lg-k">rev</span> <span class="lg-v">1.0.0</span></span>
+                <span class="lg-c"><span class="lg-k">date</span> <span class="lg-v">2026-10-19</span></span>
+            </p>
+            <details class="lg-more">
+                <summary>credits</summary>
+                <dl class="lg-grid">
+                    <div class="lg-cell"><dt>The simulator</dt><dd>Written by Bryant Frankford.</dd></div>
+                    <div class="lg-cell"><dt>The project</dt><dd>Its documentation, tests and accessibility work: Bryant Frankford, Corwin Brust and Mentat (for Corwin), as <a href="AUTHORS">AUTHORS</a> gives it.</dd></div>
+                    <div class="lg-cell"><dt>Drawn by</dt><dd><a href="https://github.com/inputloop">INPUTLOOP</a>, Bryant, and Corwin. Ideas or complaints: <a href="mailto:BryantAndCorwin@inputloop.com">BryantAndCorwin@inputloop.com</a>.</dd></div>
+                    <div class="lg-cell"><dt>p5.js</dt><dd>By the Processing Foundation and the p5.js contributors, under the GNU Lesser General Public License 2.1: <a href="vendor/p5/README.md">vendor/p5/</a>.</dd></div>
+                    <div class="lg-cell"><dt>Terms</dt><dd>Code under the <a href="COPYING">GNU General Public License</a>, version 3 or any later version; documentation under <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0</a>. No warranty, to the extent the law allows.</dd></div>
+                </dl>
+            </details>
+            <p class="lg-copy">Copyright 2026 Bryant Frankford, Corwin Brust and contributors.</p>
+        </aside>
     </div>
 
     <div id="labelLayer"></div>
@@ -13717,7 +13765,7 @@ main#stage { display: contents; }
  * described by the live statistics line, each graph by the caption above it. It changes nothing
  * the simulation does.
  *
- * Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+ * Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 (function () {

@@ -10,7 +10,7 @@ This reader is Python and knows only the format document, so the two can be held
 
 usage:  python3 tests/scene_format.py [SCENE.json ...]    check the given files (default: the examples)
         python3 tests/scene_format.py --prove-red          corrupt copies; each fault must be caught
-Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
 SPDX-License-Identifier: GPL-3.0-or-later
 """
 import copy, json, math, sys

@@ -242,6 +242,32 @@
         <!-- Hidden file input that Load Scene triggers -->
         <input type="file" id="loadSceneFileInput" accept=".json,.quantum,application/json" style="display:none">
         <button id="clear">Clear All</button>
+
+        <!-- The legend: a title block, as the drawings on corwin.cloud carry one. Who made this, under
+             what terms, and whom to write to. It is plain HTML and works with scripts off. -->
+        <aside class="legend" id="legend" aria-labelledby="legend-h">
+            <h2 id="legend-h" class="lg-h">Legend</h2>
+            <p class="lg-line">
+                <span class="lg-c"><span class="lg-k">app</span> <span class="lg-v">Quantum 3D5</span></span>
+                <span class="lg-c"><span class="lg-k">by</span> <span class="lg-v"><a href="https://github.com/takushieternal">Bryant Frankford</a></span></span>
+                <span class="lg-c"><span class="lg-k">licence</span> <span class="lg-v"><abbr title="GNU General Public License, version 3 or any later version">GPLv3+</abbr></span></span>
+                <span class="lg-c"><span class="lg-k">prose</span> <span class="lg-v"><abbr title="Creative Commons Attribution-ShareAlike 4.0 International">CC BY-SA 4.0</abbr></span></span>
+                <span class="lg-c"><span class="lg-k">source</span> <span class="lg-v"><a href="https://github.com/inputloop/quantum3d5">quantum3d5</a></span></span>
+                <span class="lg-c"><span class="lg-k">rev</span> <span class="lg-v">1.0.0</span></span>
+                <span class="lg-c"><span class="lg-k">date</span> <span class="lg-v">2026-10-19</span></span>
+            </p>
+            <details class="lg-more">
+                <summary>credits</summary>
+                <dl class="lg-grid">
+                    <div class="lg-cell"><dt>The simulator</dt><dd>Written by Bryant Frankford.</dd></div>
+                    <div class="lg-cell"><dt>The project</dt><dd>Its documentation, tests and accessibility work: Bryant Frankford, Corwin Brust and Mentat (for Corwin), as <a href="AUTHORS">AUTHORS</a> gives it.</dd></div>
+                    <div class="lg-cell"><dt>Drawn by</dt><dd><a href="https://github.com/inputloop">INPUTLOOP</a>, Bryant, and Corwin. Ideas or complaints: <a href="mailto:BryantAndCorwin@inputloop.com">BryantAndCorwin@inputloop.com</a>.</dd></div>
+                    <div class="lg-cell"><dt>p5.js</dt><dd>By the Processing Foundation and the p5.js contributors, under the GNU Lesser General Public License 2.1: <a href="vendor/p5/README.md">vendor/p5/</a>.</dd></div>
+                    <div class="lg-cell"><dt>Terms</dt><dd>Code under the <a href="COPYING">GNU General Public License</a>, version 3 or any later version; documentation under <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0</a>. No warranty, to the extent the law allows.</dd></div>
+                </dl>
+            </details>
+            <p class="lg-copy">Copyright 2026 Bryant Frankford, Corwin Brust and contributors.</p>
+        </aside>
     </div>
 
     <div id="labelLayer"></div>

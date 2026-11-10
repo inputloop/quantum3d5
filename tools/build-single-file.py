@@ -12,7 +12,7 @@ It reads index.html and replaces each local <link rel="stylesheet" href="..."> a
 <script src="..."></script> with the file's contents. Anything it cannot inline (a remote URL, a
 missing file) stops the build: the result is self-contained or it is not written.
 
-Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
 SPDX-License-Identifier: GPL-3.0-or-later
 """
 import re, sys

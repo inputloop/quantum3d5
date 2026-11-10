@@ -14,7 +14,7 @@ usage:  python3 tests/accessibility.py [PAGE]
         python3 tests/accessibility.py --prove-red     plant one fault per check in a copy; each must go red
 Needs Playwright with Chromium, and axe-core (npm install, see package.json; or AXE=/path/axe.min.js).
 
-Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
 SPDX-License-Identifier: GPL-3.0-or-later
 """
 import os, shutil, sys, tempfile

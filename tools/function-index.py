@@ -12,7 +12,7 @@ and tests/smoke.py's neighbour, `--check`, says when the map is stale.
 usage:  python3 tools/function-index.py            write model/FUNCTIONS.md
         python3 tools/function-index.py --check    exit 1 if model/FUNCTIONS.md is out of date
 
-Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
 SPDX-License-Identifier: GPL-3.0-or-later
 """
 import re, sys

@@ -105,5 +105,5 @@ are kept by Bryant Frankford and Corwin Brust.
 - Documentation: Creative Commons Attribution-ShareAlike 4.0.
 - p5.js: GNU Lesser General Public License 2.1, see [vendor/p5/LICENSE](vendor/p5/LICENSE).
 
-Part of the collection Corwin Brust and Bryant Frankford keep together at
+Part of the collection Bryant Frankford and Corwin Brust keep together at
 <https://github.com/inputloop>. See [AUTHORS](AUTHORS) and [CHANGELOG.md](CHANGELOG.md).

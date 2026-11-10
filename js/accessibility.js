@@ -5,7 +5,7 @@
  * described by the live statistics line, each graph by the caption above it. It changes nothing
  * the simulation does.
  *
- * Copyright (C) 2026 Corwin Brust, Bryant Frankford and Contributors.
+ * Copyright (C) 2026 Bryant Frankford, Corwin Brust and Contributors.
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 (function () {
